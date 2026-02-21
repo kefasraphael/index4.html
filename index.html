@@ -13,16 +13,14 @@
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Firebase SDK -->
+    <!-- Firebase SDK (COMPAT VERSION - HII NDIYO INAYOTAKIWA) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
     
     <!-- CSS -->
     <style>
-        /* ===== ABSTA CREATIVES STYLES ===== */
+        /* CSS yako hapa - imebaki sawa */
         :root {
-            /* Modern Color Palette */
             --absta-primary: #FF3366;
             --absta-secondary: #3366FF;
             --absta-accent: #33FFCC;
@@ -31,8 +29,6 @@
             --absta-gray: #8E8E93;
             --absta-success: #33FF88;
             --absta-warning: #FFAA33;
-            
-            /* Effects */
             --glass-bg: rgba(255, 255, 255, 0.08);
             --glass-border: rgba(255, 255, 255, 0.1);
             --shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
@@ -138,7 +134,6 @@
             animation: none;
         }
         
-        /* ===== UTILITY CLASSES ===== */
         .page {
             display: none;
             min-height: 100vh;
@@ -147,10 +142,6 @@
         
         .page.active {
             display: block;
-        }
-        
-        .hidden {
-            display: none !important;
         }
         
         .text-gradient {
@@ -460,7 +451,6 @@
             letter-spacing: 1px;
         }
         
-        /* ===== PORTFOLIO PAGE ===== */
         .portfolio-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
@@ -545,7 +535,6 @@
             gap: 8px;
         }
         
-        /* ===== SERVICES PAGE ===== */
         .services-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -669,7 +658,6 @@
             color: var(--absta-success);
         }
         
-        /* ===== ABOUT PAGE ===== */
         .team-section {
             padding: 60px 0;
         }
@@ -801,7 +789,6 @@
             color: var(--absta-gray);
         }
         
-        /* ===== CONTACT PAGE ===== */
         .contact-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -885,7 +872,6 @@
             resize: vertical;
         }
 
-        /* ===== FILE UPLOAD STYLES ===== */
         .file-upload-container {
             margin-bottom: 15px;
         }
@@ -943,7 +929,6 @@
             word-break: break-all;
         }
         
-        /* ===== ADMIN PANEL ===== */
         .admin-header {
             background: var(--glass-bg);
             backdrop-filter: blur(10px);
@@ -1106,7 +1091,6 @@
             transform: translateY(-2px);
         }
         
-        /* ===== LOGIN PAGE ===== */
         .login-container {
             min-height: calc(100vh - 80px);
             display: flex;
@@ -1140,7 +1124,6 @@
             color: white;
         }
         
-        /* ===== FOOTER ===== */
         .footer {
             padding: 80px 0 30px;
             background: rgba(0, 0, 0, 0.5);
@@ -1234,7 +1217,6 @@
             font-size: 0.9rem;
         }
         
-        /* ===== MODALS ===== */
         .modal {
             position: fixed;
             top: 0;
@@ -1300,7 +1282,6 @@
             padding: 30px;
         }
         
-        /* ===== RESPONSIVE ===== */
         @media (max-width: 768px) {
             .nav-links {
                 position: fixed;
@@ -1403,13 +1384,11 @@
     <!-- Navigation -->
     <nav class="navbar">
         <div class="container nav-container">
-            <!-- Logo -->
             <a href="#" class="logo" onclick="navigateTo('home')">
                 <div class="logo-icon">A</div>
                 <div class="logo-text">ABSTA CREATIVES</div>
             </a>
 
-            <!-- Navigation Links -->
             <div class="nav-links" id="navLinks">
                 <a href="#" class="nav-link active" onclick="navigateTo('home')">
                     <i class="fas fa-home"></i>
@@ -1437,7 +1416,6 @@
                 </a>
             </div>
 
-            <!-- Mobile Menu Toggle -->
             <button class="mobile-toggle" id="mobileToggle">
                 <i class="fas fa-bars"></i>
             </button>
@@ -1498,7 +1476,6 @@
             </div>
         </section>
 
-        <!-- Featured Work -->
         <section class="services" style="padding: 100px 0;">
             <div class="container">
                 <div class="section-header">
@@ -1507,9 +1484,7 @@
                     <p class="section-subtitle">A showcase of our latest creative achievements</p>
                 </div>
                 
-                <div class="portfolio-grid" id="featuredProjects">
-                    <!-- Featured projects loaded here -->
-                </div>
+                <div class="portfolio-grid" id="featuredProjects"></div>
                 
                 <div style="text-align: center;">
                     <a href="#" class="btn btn-outline" onclick="navigateTo('portfolio')">
@@ -1520,7 +1495,6 @@
             </div>
         </section>
 
-        <!-- Services Preview -->
         <section class="services" style="background: rgba(255, 255, 255, 0.02);">
             <div class="container">
                 <div class="section-header">
@@ -1582,7 +1556,6 @@
         </section>
 
         <div class="container">
-            <!-- Filter Tabs -->
             <div class="admin-tabs" id="portfolioTabs" style="margin: 40px 0;">
                 <div class="admin-tab active" data-filter="all">All Projects</div>
                 <div class="admin-tab" data-filter="wedding">Wedding Films</div>
@@ -1592,10 +1565,7 @@
                 <div class="admin-tab" data-filter="photography">Photography</div>
             </div>
             
-            <!-- Portfolio Grid -->
-            <div class="portfolio-grid" id="portfolioGrid">
-                <!-- Portfolio projects loaded here -->
-            </div>
+            <div class="portfolio-grid" id="portfolioGrid"></div>
         </div>
     </div>
 
@@ -1623,7 +1593,6 @@
         </section>
 
         <div class="container">
-            <!-- Services Grid -->
             <div class="services-grid" style="margin: 80px 0;">
                 <div class="service-card">
                     <div class="service-icon">
@@ -1674,7 +1643,6 @@
                 </div>
             </div>
 
-            <!-- Pricing Section -->
             <div class="pricing-table">
                 <div class="section-header">
                     <div class="section-label">Packages</div>
@@ -1754,7 +1722,6 @@
         </section>
 
         <div class="container">
-            <!-- Team Section -->
             <div class="team-section">
                 <div class="section-header">
                     <div class="section-label">Our Team</div>
@@ -1762,12 +1729,9 @@
                     <p class="section-subtitle">The talented individuals behind our visual masterpieces</p>
                 </div>
                 
-                <div class="team-grid" id="teamGrid">
-                    <!-- Team members loaded here -->
-                </div>
+                <div class="team-grid" id="teamGrid"></div>
             </div>
 
-            <!-- Timeline -->
             <div class="timeline">
                 <div class="section-header">
                     <div class="section-label">Our Journey</div>
@@ -1929,7 +1893,6 @@
                 <p style="color: var(--absta-gray);">Manage your website content, projects, and team members</p>
             </div>
             
-            <!-- Admin Stats -->
             <div class="admin-stats">
                 <div class="admin-stat">
                     <i class="fas fa-video"></i>
@@ -1953,7 +1916,6 @@
                 </div>
             </div>
             
-            <!-- Admin Tabs -->
             <div class="admin-tabs" id="adminTabs">
                 <div class="admin-tab active" onclick="showAdminSection('projects')">Projects</div>
                 <div class="admin-tab" onclick="showAdminSection('team')">Team</div>
@@ -1964,9 +1926,7 @@
                 </div>
             </div>
             
-            <!-- Admin Content -->
             <div class="admin-content">
-                <!-- Projects Section -->
                 <div id="projects-section" class="admin-section active">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
                         <h3 style="color: white;">Manage Projects</h3>
@@ -1986,14 +1946,11 @@
                                     <th>Actions</th>
                                 </tr>
                             </thead>
-                            <tbody id="projectsTableBody">
-                                <!-- Projects will be loaded here -->
-                            </tbody>
+                            <tbody id="projectsTableBody"></tbody>
                         </table>
                     </div>
                 </div>
                 
-                <!-- Team Section -->
                 <div id="team-section" class="admin-section">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
                         <h3 style="color: white;">Manage Team</h3>
@@ -2013,14 +1970,11 @@
                                     <th>Actions</th>
                                 </tr>
                             </thead>
-                            <tbody id="teamTableBody">
-                                <!-- Team members will be loaded here -->
-                            </tbody>
+                            <tbody id="teamTableBody"></tbody>
                         </table>
                     </div>
                 </div>
                 
-                <!-- Messages Section -->
                 <div id="messages-section" class="admin-section">
                     <h3 style="color: white; margin-bottom: 30px;">Contact Messages</h3>
                     
@@ -2035,14 +1989,11 @@
                                     <th>Actions</th>
                                 </tr>
                             </thead>
-                            <tbody id="messagesTableBody">
-                                <!-- Messages will be loaded here -->
-                            </tbody>
+                            <tbody id="messagesTableBody"></tbody>
                         </table>
                     </div>
                 </div>
                 
-                <!-- Settings Section -->
                 <div id="settings-section" class="admin-section">
                     <h3 style="color: white; margin-bottom: 30px;">Website Settings</h3>
                     
@@ -2134,9 +2085,7 @@
                         We create visual stories that captivate, inspire, and leave lasting impressions. 
                         Your vision, our creativity.
                     </p>
-                    <div class="social-links" id="socialLinks">
-                        <!-- Social links loaded here -->
-                    </div>
+                    <div class="social-links" id="socialLinks"></div>
                 </div>
                 
                 <div class="footer-col">
@@ -2171,7 +2120,6 @@
     </footer>
 
     <!-- Modals -->
-    <!-- Project Modal -->
     <div class="modal" id="projectModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -2243,7 +2191,6 @@
         </div>
     </div>
     
-    <!-- Team Modal -->
     <div class="modal" id="teamModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -2309,7 +2256,6 @@
         </div>
     </div>
     
-    <!-- Message Modal -->
     <div class="modal" id="messageModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -2367,38 +2313,33 @@
         let editingTeamId = null;
         let viewingMessageId = null;
         
-        // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyAoBDaxlmdHZNibOPo39lUk-LzNl3VFMnY",
-  authDomain: "absta-creatives.firebaseapp.com",
-  projectId: "absta-creatives",
-  storageBucket: "absta-creatives.firebasestorage.app",
-  messagingSenderId: "1057402336705",
-  appId: "1:1057402336705:web:257880680e9eba1582eb40",
-  measurementId: "G-HGXXKTQNHD"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+        // ===== FIREBASE CONFIGURATION - WEKA HAPA CONFIG ZAKO =====
+        const firebaseConfig = {
+            apiKey: "AIzaSyAoBDaxlmdHZNibOPo39lUk-LzNl3VFMnY",
+            authDomain: "absta-creatives.firebaseapp.com",
+            databaseURL: "https://absta-creatives-default-rtdb.firebaseio.com",
+            projectId: "absta-creatives",
+            storageBucket: "absta-creatives.firebasestorage.app",
+            messagingSenderId: "1057402336705",
+            appId: "1:1057402336705:web:257880680e9eba1582eb40"
+        };
         
         // Initialize Firebase
         let database;
-        let storage;
         let isFirebaseInitialized = false;
 
         // ===== FIREBASE INITIALIZATION =====
         function initFirebase() {
             try {
-                // Check if Firebase config is set
-                if (firebaseConfig.apiKey === "YOUR_API_KEY") {
+                // Check if Firebase is already initialized
+                if (typeof firebase === 'undefined') {
+                    console.error("Firebase SDK not loaded");
+                    showSyncStatus('error', 'Firebase SDK not loaded');
+                    return false;
+                }
+                
+                // Check if Firebase config is valid
+                if (!firebaseConfig.apiKey || firebaseConfig.apiKey === "YOUR_API_KEY") {
                     console.warn("Firebase not configured. Using localStorage only.");
                     showSyncStatus('local', 'Using local storage only');
                     return false;
@@ -2407,13 +2348,22 @@ const analytics = getAnalytics(app);
                 // Initialize Firebase
                 firebase.initializeApp(firebaseConfig);
                 database = firebase.database();
-                storage = firebase.storage();
                 isFirebaseInitialized = true;
                 
-                // Start listening for changes
-                listenForChanges();
+                // Test connection
+                database.ref('.info/connected').on('value', (snap) => {
+                    if (snap.val() === true) {
+                        console.log("Firebase connected successfully");
+                        showSyncStatus('success', 'Connected to cloud');
+                        
+                        // Start listening for changes
+                        listenForChanges();
+                        
+                        // Load data from Firebase
+                        loadFromFirebase();
+                    }
+                });
                 
-                console.log("Firebase initialized successfully");
                 return true;
             } catch (error) {
                 console.error("Firebase initialization error:", error);
@@ -2425,6 +2375,8 @@ const analytics = getAnalytics(app);
         // ===== SYNC STATUS =====
         function showSyncStatus(type, message) {
             const syncStatus = document.getElementById('syncStatus');
+            if (!syncStatus) return;
+            
             const icon = syncStatus.querySelector('i');
             const span = syncStatus.querySelector('span');
             
@@ -2432,12 +2384,11 @@ const analytics = getAnalytics(app);
             
             if (type === 'syncing') {
                 icon.className = 'fas fa-sync-alt';
-                span.textContent = 'Syncing...';
+                span.textContent = message || 'Syncing...';
             } else if (type === 'success') {
                 icon.className = 'fas fa-check-circle';
-                span.textContent = 'Synced';
+                span.textContent = message || 'Synced';
                 
-                // Auto hide after 2 seconds
                 setTimeout(() => {
                     syncStatus.classList.remove('active');
                 }, 2000);
@@ -2452,19 +2403,15 @@ const analytics = getAnalytics(app);
 
         // ===== LISTEN FOR CHANGES =====
         function listenForChanges() {
-            if (!isFirebaseInitialized) return;
+            if (!isFirebaseInitialized || !database) return;
             
             // Listen for projects changes
             database.ref('projects').on('value', (snapshot) => {
                 const projects = snapshot.val();
                 if (projects) {
-                    // Convert object to array
                     const projectsArray = Object.values(projects);
                     localStorage.setItem('absta_projects', JSON.stringify(projectsArray));
-                    
-                    // Update UI based on current page
                     updateUIAfterSync();
-                    
                     showSyncStatus('success', 'Projects updated');
                 }
             });
@@ -2475,9 +2422,7 @@ const analytics = getAnalytics(app);
                 if (team) {
                     const teamArray = Object.values(team);
                     localStorage.setItem('absta_team', JSON.stringify(teamArray));
-                    
                     updateUIAfterSync();
-                    
                     showSyncStatus('success', 'Team updated');
                 }
             });
@@ -2487,9 +2432,7 @@ const analytics = getAnalytics(app);
                 const settings = snapshot.val();
                 if (settings) {
                     localStorage.setItem('absta_settings', JSON.stringify(settings));
-                    
                     updateUIAfterSync();
-                    
                     showSyncStatus('success', 'Settings updated');
                 }
             });
@@ -2501,7 +2444,7 @@ const analytics = getAnalytics(app);
                     const messagesArray = Object.values(messages);
                     localStorage.setItem('absta_messages', JSON.stringify(messagesArray));
                     
-                    if (document.getElementById('messages-section').classList.contains('active')) {
+                    if (document.getElementById('messages-section')?.classList.contains('active')) {
                         loadAdminMessages();
                     }
                 }
@@ -2509,7 +2452,9 @@ const analytics = getAnalytics(app);
         }
 
         function updateUIAfterSync() {
-            const activePage = document.querySelector('.page.active').id;
+            const activePage = document.querySelector('.page.active')?.id;
+            
+            if (!activePage) return;
             
             switch(activePage) {
                 case 'home-page':
@@ -2529,7 +2474,10 @@ const analytics = getAnalytics(app);
 
         // ===== SYNC TO FIREBASE =====
         function syncToFirebase(type, data) {
-            if (!isFirebaseInitialized) return;
+            if (!isFirebaseInitialized || !database) {
+                console.log("Firebase not initialized, saving locally only");
+                return;
+            }
             
             showSyncStatus('syncing', 'Syncing...');
             
@@ -2539,6 +2487,7 @@ const analytics = getAnalytics(app);
             database.ref().update(updates)
                 .then(() => {
                     console.log(`${type} synced successfully`);
+                    showSyncStatus('success', 'Synced');
                 })
                 .catch((error) => {
                     console.error(`Error syncing ${type}:`, error);
@@ -2556,28 +2505,27 @@ const analytics = getAnalytics(app);
                 }, 500);
             }, 1000);
 
-            // Initialize all components
+            // Initialize navigation
             initNavigation();
+            
+            // Initialize default data
             initData();
             
             // Try to initialize Firebase
-            const firebaseInit = initFirebase();
+            initFirebase();
             
-            // If Firebase is initialized, load from Firebase first
-            if (firebaseInit) {
-                loadFromFirebase();
-            } else {
-                loadHomePage();
-            }
+            // Load home page
+            loadHomePage();
             
+            // Update year
             updateCurrentYear();
             
-            // Check if user is logged in
+            // Check login status
             checkLoginStatus();
         });
 
         function loadFromFirebase() {
-            if (!isFirebaseInitialized) {
+            if (!isFirebaseInitialized || !database) {
                 loadHomePage();
                 return;
             }
@@ -2591,19 +2539,19 @@ const analytics = getAnalytics(app);
                 database.ref('settings').once('value'),
                 database.ref('messages').once('value')
             ]).then(([projectsSnap, teamSnap, settingsSnap, messagesSnap]) => {
-                if (projectsSnap.val()) {
+                if (projectsSnap.exists()) {
                     localStorage.setItem('absta_projects', JSON.stringify(Object.values(projectsSnap.val())));
                 }
                 
-                if (teamSnap.val()) {
+                if (teamSnap.exists()) {
                     localStorage.setItem('absta_team', JSON.stringify(Object.values(teamSnap.val())));
                 }
                 
-                if (settingsSnap.val()) {
+                if (settingsSnap.exists()) {
                     localStorage.setItem('absta_settings', JSON.stringify(settingsSnap.val()));
                 }
                 
-                if (messagesSnap.val()) {
+                if (messagesSnap.exists()) {
                     localStorage.setItem('absta_messages', JSON.stringify(Object.values(messagesSnap.val())));
                 }
                 
@@ -2618,15 +2566,15 @@ const analytics = getAnalytics(app);
 
         // ===== NAVIGATION =====
         function initNavigation() {
-            // Mobile menu toggle
             const mobileToggle = document.getElementById('mobileToggle');
             const navLinks = document.getElementById('navLinks');
             
-            mobileToggle.addEventListener('click', function() {
-                navLinks.classList.toggle('active');
-            });
+            if (mobileToggle) {
+                mobileToggle.addEventListener('click', function() {
+                    navLinks.classList.toggle('active');
+                });
+            }
             
-            // Close mobile menu when clicking a link
             document.querySelectorAll('.nav-link').forEach(link => {
                 link.addEventListener('click', () => {
                     navLinks.classList.remove('active');
@@ -2635,28 +2583,23 @@ const analytics = getAnalytics(app);
         }
 
         function navigateTo(page) {
-            // Hide all pages
             document.querySelectorAll('.page').forEach(p => {
                 p.classList.remove('active');
             });
             
-            // Update active nav link
             document.querySelectorAll('.nav-link').forEach(link => {
                 link.classList.remove('active');
             });
             
-            // Show selected page
             const pageElement = document.getElementById(`${page}-page`);
             if (pageElement) {
                 pageElement.classList.add('active');
                 
-                // Update active nav link
                 const navLink = document.querySelector(`.nav-link[onclick*="${page}"]`);
                 if (navLink) {
                     navLink.classList.add('active');
                 }
                 
-                // Load page specific content
                 switch(page) {
                     case 'home':
                         loadHomePage();
@@ -2675,14 +2618,12 @@ const analytics = getAnalytics(app);
                         break;
                 }
                 
-                // Scroll to top
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         }
 
         // ===== DATA MANAGEMENT =====
         function initData() {
-            // Initialize default data if not exists
             if (!localStorage.getItem('absta_projects')) {
                 const defaultProjects = [
                     {
@@ -2764,7 +2705,6 @@ const analytics = getAnalytics(app);
                 localStorage.setItem('absta_settings', JSON.stringify(defaultSettings));
             }
             
-            // Initialize admin user if not exists
             if (!localStorage.getItem('absta_admin')) {
                 const adminUser = {
                     username: 'admin',
@@ -2779,19 +2719,16 @@ const analytics = getAnalytics(app);
             const file = input.files[0];
             if (!file) return;
             
-            // Check file size (max 5MB)
             if (file.size > 5 * 1024 * 1024) {
                 alert('File is too large! Maximum size is 5MB.');
                 return;
             }
             
-            // Show file name
             const fileNameElement = document.getElementById(input.id.replace('Upload', 'FileName'));
             if (fileNameElement) {
                 fileNameElement.textContent = `Selected: ${file.name}`;
             }
             
-            // Update upload button text
             const buttonText = document.getElementById(input.id.replace('Upload', 'UploadButtonText'));
             if (buttonText) {
                 buttonText.textContent = 'Change Image';
@@ -2800,13 +2737,11 @@ const analytics = getAnalytics(app);
             const reader = new FileReader();
             
             reader.onload = function(e) {
-                // Set preview image
                 const preview = document.getElementById(previewId);
                 const previewImg = preview.querySelector('img');
                 previewImg.src = e.target.result;
                 preview.classList.add('active');
                 
-                // Set hidden input value with base64 data
                 document.getElementById(hiddenInputId).value = e.target.result;
             };
             
@@ -2822,9 +2757,9 @@ const analytics = getAnalytics(app);
 
         function loadFeaturedProjects() {
             const projectsGrid = document.getElementById('featuredProjects');
-            const projects = JSON.parse(localStorage.getItem('absta_projects') || '[]');
+            if (!projectsGrid) return;
             
-            // Take first 3 projects
+            const projects = JSON.parse(localStorage.getItem('absta_projects') || '[]');
             const featured = projects.slice(0, 3);
             
             if (featured.length === 0) {
@@ -2860,18 +2795,10 @@ const analytics = getAnalytics(app);
 
         function updateStats() {
             const projects = JSON.parse(localStorage.getItem('absta_projects') || '[]');
-            document.getElementById('projectsCount').textContent = projects.length;
-            
-            // Animate count
-            let count = 0;
-            const target = projects.length;
-            const interval = setInterval(() => {
-                count++;
-                document.getElementById('projectsCount').textContent = count;
-                if (count >= target) {
-                    clearInterval(interval);
-                }
-            }, 50);
+            const projectsCount = document.getElementById('projectsCount');
+            if (projectsCount) {
+                projectsCount.textContent = projects.length;
+            }
         }
 
         // ===== PORTFOLIO PAGE =====
@@ -2882,6 +2809,8 @@ const analytics = getAnalytics(app);
 
         function loadAllProjects() {
             const portfolioGrid = document.getElementById('portfolioGrid');
+            if (!portfolioGrid) return;
+            
             const projects = JSON.parse(localStorage.getItem('absta_projects') || '[]');
             
             if (projects.length === 0) {
@@ -2919,11 +2848,9 @@ const analytics = getAnalytics(app);
             const tabs = document.querySelectorAll('#portfolioTabs .admin-tab');
             tabs.forEach(tab => {
                 tab.addEventListener('click', function() {
-                    // Update active tab
                     tabs.forEach(t => t.classList.remove('active'));
                     this.classList.add('active');
                     
-                    // Filter projects
                     const filter = this.getAttribute('data-filter');
                     filterPortfolioProjects(filter);
                 });
@@ -2957,6 +2884,8 @@ const analytics = getAnalytics(app);
 
         function loadTeamMembers() {
             const teamGrid = document.getElementById('teamGrid');
+            if (!teamGrid) return;
+            
             const team = JSON.parse(localStorage.getItem('absta_team') || '[]');
             
             if (team.length === 0) {
@@ -2998,18 +2927,24 @@ const analytics = getAnalytics(app);
             const settings = JSON.parse(localStorage.getItem('absta_settings') || '{}');
             
             if (settings.companyAddress) {
-                document.getElementById('contactAddress').textContent = settings.companyAddress;
-                document.getElementById('footerAddress').textContent = settings.companyAddress;
+                const contactAddress = document.getElementById('contactAddress');
+                const footerAddress = document.getElementById('footerAddress');
+                if (contactAddress) contactAddress.textContent = settings.companyAddress;
+                if (footerAddress) footerAddress.textContent = settings.companyAddress;
             }
             
             if (settings.companyPhone) {
-                document.getElementById('contactPhone').textContent = settings.companyPhone;
-                document.getElementById('footerPhone').textContent = settings.companyPhone;
+                const contactPhone = document.getElementById('contactPhone');
+                const footerPhone = document.getElementById('footerPhone');
+                if (contactPhone) contactPhone.textContent = settings.companyPhone;
+                if (footerPhone) footerPhone.textContent = settings.companyPhone;
             }
             
             if (settings.companyEmail) {
-                document.getElementById('contactEmail').textContent = settings.companyEmail;
-                document.getElementById('footerEmail').textContent = settings.companyEmail;
+                const contactEmail = document.getElementById('contactEmail');
+                const footerEmail = document.getElementById('footerEmail');
+                if (contactEmail) contactEmail.textContent = settings.companyEmail;
+                if (footerEmail) footerEmail.textContent = settings.companyEmail;
             }
         }
 
@@ -3029,12 +2964,10 @@ const analytics = getAnalytics(app);
                         read: false
                     };
                     
-                    // Save message to localStorage
                     const messages = JSON.parse(localStorage.getItem('absta_messages') || '[]');
                     messages.unshift(message);
                     localStorage.setItem('absta_messages', JSON.stringify(messages));
                     
-                    // Sync to Firebase
                     if (isFirebaseInitialized) {
                         const messagesObj = {};
                         messages.forEach((msg, index) => {
@@ -3043,13 +2976,8 @@ const analytics = getAnalytics(app);
                         syncToFirebase('messages', messagesObj);
                     }
                     
-                    // Show success message
                     alert('Thank you for your message! We will get back to you soon.');
-                    
-                    // Reset form
                     contactForm.reset();
-                    
-                    // Update admin stats if on admin page
                     updateAdminStats();
                 });
             }
@@ -3077,26 +3005,29 @@ const analytics = getAnalytics(app);
             const team = JSON.parse(localStorage.getItem('absta_team') || '[]');
             const messages = JSON.parse(localStorage.getItem('absta_messages') || '[]');
             
-            document.getElementById('adminProjectsCount').textContent = projects.length;
-            document.getElementById('adminTeamCount').textContent = team.length;
-            document.getElementById('adminMessagesCount').textContent = messages.length;
+            const projectsCount = document.getElementById('adminProjectsCount');
+            const teamCount = document.getElementById('adminTeamCount');
+            const messagesCount = document.getElementById('adminMessagesCount');
+            
+            if (projectsCount) projectsCount.textContent = projects.length;
+            if (teamCount) teamCount.textContent = team.length;
+            if (messagesCount) messagesCount.textContent = messages.length;
         }
 
         function showAdminSection(section) {
-            // Hide all sections
             document.querySelectorAll('.admin-section').forEach(sec => {
                 sec.classList.remove('active');
             });
             
-            // Update active tab
             document.querySelectorAll('#adminTabs .admin-tab').forEach(tab => {
                 tab.classList.remove('active');
             });
             
-            // Show selected section
-            document.getElementById(`${section}-section`).classList.add('active');
+            const sectionElement = document.getElementById(`${section}-section`);
+            if (sectionElement) {
+                sectionElement.classList.add('active');
+            }
             
-            // Update tab (skip logout button)
             const tabs = document.querySelectorAll('#adminTabs .admin-tab');
             for (let i = 0; i < tabs.length - 1; i++) {
                 if (tabs[i].getAttribute('onclick')?.includes(section)) {
@@ -3105,7 +3036,6 @@ const analytics = getAnalytics(app);
                 }
             }
             
-            // Refresh section data
             switch(section) {
                 case 'projects':
                     loadAdminProjects();
@@ -3125,6 +3055,8 @@ const analytics = getAnalytics(app);
         // ===== ADMIN PROJECTS =====
         function loadAdminProjects() {
             const tbody = document.getElementById('projectsTableBody');
+            if (!tbody) return;
+            
             const projects = JSON.parse(localStorage.getItem('absta_projects') || '[]');
             
             if (projects.length === 0) {
@@ -3166,14 +3098,12 @@ const analytics = getAnalytics(app);
             const form = document.getElementById('projectForm');
             const deleteBtn = document.getElementById('deleteProjectBtn');
             
-            // Reset file upload UI
-            document.getElementById('projectImagePreview').classList.remove('active');
+            document.getElementById('projectImagePreview')?.classList.remove('active');
             document.getElementById('projectFileName').textContent = '';
             document.getElementById('uploadButtonText').textContent = 'Choose Image from Device';
             document.getElementById('projectImageData').value = '';
             
             if (projectId) {
-                // Edit mode
                 editingProjectId = projectId;
                 const projects = JSON.parse(localStorage.getItem('absta_projects') || '[]');
                 const project = projects.find(p => p.id == projectId);
@@ -3186,7 +3116,6 @@ const analytics = getAnalytics(app);
                     document.getElementById('projectDescription').value = project.description;
                     document.getElementById('projectDate').value = project.date;
                     
-                    // Show existing image
                     if (project.image) {
                         const preview = document.getElementById('projectImagePreview');
                         const previewImg = preview.querySelector('img');
@@ -3199,7 +3128,6 @@ const analytics = getAnalytics(app);
                     deleteBtn.style.display = 'inline-flex';
                 }
             } else {
-                // Add mode
                 editingProjectId = null;
                 document.getElementById('modalProjectTitle').textContent = 'Add New Project';
                 form.reset();
@@ -3210,14 +3138,11 @@ const analytics = getAnalytics(app);
             modal.classList.add('active');
         }
 
-        // Handle project form submission
         document.getElementById('projectForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
-            // Get image data
             let imageData = document.getElementById('projectImageData').value;
             
-            // If no image uploaded, use default based on category
             if (!imageData) {
                 const category = document.getElementById('projectCategory').value;
                 imageData = getDefaultImage(category);
@@ -3235,16 +3160,13 @@ const analytics = getAnalytics(app);
             let projects = JSON.parse(localStorage.getItem('absta_projects') || '[]');
             
             if (editingProjectId) {
-                // Update existing project
                 projects = projects.map(p => p.id == editingProjectId ? project : p);
             } else {
-                // Add new project
                 projects.unshift(project);
             }
             
             localStorage.setItem('absta_projects', JSON.stringify(projects));
             
-            // Sync to Firebase
             if (isFirebaseInitialized) {
                 const projectsObj = {};
                 projects.forEach((proj, index) => {
@@ -3253,17 +3175,13 @@ const analytics = getAnalytics(app);
                 syncToFirebase('projects', projectsObj);
             }
             
-            // Update UI
             loadAdminProjects();
             loadAllProjects();
             loadFeaturedProjects();
             updateAdminStats();
             updateStats();
             
-            // Close modal
             closeModal('projectModal');
-            
-            // Show success message
             alert(`Project ${editingProjectId ? 'updated' : 'added'} successfully!`);
         });
 
@@ -3276,7 +3194,6 @@ const analytics = getAnalytics(app);
                 projects = projects.filter(p => p.id != projectId);
                 localStorage.setItem('absta_projects', JSON.stringify(projects));
                 
-                // Sync to Firebase
                 if (isFirebaseInitialized) {
                     const projectsObj = {};
                     projects.forEach((proj, index) => {
@@ -3285,16 +3202,13 @@ const analytics = getAnalytics(app);
                     syncToFirebase('projects', projectsObj);
                 }
                 
-                // Update UI
                 loadAdminProjects();
                 loadAllProjects();
                 loadFeaturedProjects();
                 updateAdminStats();
                 updateStats();
                 
-                // Close modal if open
                 closeModal('projectModal');
-                
                 alert('Project deleted successfully!');
             }
         }
@@ -3313,6 +3227,8 @@ const analytics = getAnalytics(app);
         // ===== ADMIN TEAM =====
         function loadAdminTeam() {
             const tbody = document.getElementById('teamTableBody');
+            if (!tbody) return;
+            
             const team = JSON.parse(localStorage.getItem('absta_team') || '[]');
             
             if (team.length === 0) {
@@ -3354,14 +3270,12 @@ const analytics = getAnalytics(app);
             const form = document.getElementById('teamForm');
             const deleteBtn = document.getElementById('deleteTeamBtn');
             
-            // Reset file upload UI
-            document.getElementById('teamImagePreview').classList.remove('active');
+            document.getElementById('teamImagePreview')?.classList.remove('active');
             document.getElementById('teamFileName').textContent = '';
             document.getElementById('teamUploadButtonText').textContent = 'Choose Image from Device';
             document.getElementById('teamImageData').value = '';
             
             if (memberId) {
-                // Edit mode
                 editingTeamId = memberId;
                 const team = JSON.parse(localStorage.getItem('absta_team') || '[]');
                 const member = team.find(m => m.id == memberId);
@@ -3374,7 +3288,6 @@ const analytics = getAnalytics(app);
                     document.getElementById('teamEmail').value = member.email || '';
                     document.getElementById('teamBio').value = member.bio;
                     
-                    // Show existing image
                     if (member.image) {
                         const preview = document.getElementById('teamImagePreview');
                         const previewImg = preview.querySelector('img');
@@ -3387,7 +3300,6 @@ const analytics = getAnalytics(app);
                     deleteBtn.style.display = 'inline-flex';
                 }
             } else {
-                // Add mode
                 editingTeamId = null;
                 document.getElementById('modalTeamTitle').textContent = 'Add Team Member';
                 form.reset();
@@ -3397,14 +3309,11 @@ const analytics = getAnalytics(app);
             modal.classList.add('active');
         }
 
-        // Handle team form submission
         document.getElementById('teamForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
-            // Get image data
             let imageData = document.getElementById('teamImageData').value;
             
-            // If no image uploaded, use default
             if (!imageData) {
                 imageData = 'https://images.unsplash.com/photo-1494790108755-2616b786d4d9?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80';
             }
@@ -3421,16 +3330,13 @@ const analytics = getAnalytics(app);
             let team = JSON.parse(localStorage.getItem('absta_team') || '[]');
             
             if (editingTeamId) {
-                // Update existing member
                 team = team.map(m => m.id == editingTeamId ? member : m);
             } else {
-                // Add new member
                 team.unshift(member);
             }
             
             localStorage.setItem('absta_team', JSON.stringify(team));
             
-            // Sync to Firebase
             if (isFirebaseInitialized) {
                 const teamObj = {};
                 team.forEach((mem, index) => {
@@ -3439,15 +3345,11 @@ const analytics = getAnalytics(app);
                 syncToFirebase('team', teamObj);
             }
             
-            // Update UI
             loadAdminTeam();
             loadTeamMembers();
             updateAdminStats();
             
-            // Close modal
             closeModal('teamModal');
-            
-            // Show success message
             alert(`Team member ${editingTeamId ? 'updated' : 'added'} successfully!`);
         });
 
@@ -3460,7 +3362,6 @@ const analytics = getAnalytics(app);
                 team = team.filter(m => m.id != memberId);
                 localStorage.setItem('absta_team', JSON.stringify(team));
                 
-                // Sync to Firebase
                 if (isFirebaseInitialized) {
                     const teamObj = {};
                     team.forEach((mem, index) => {
@@ -3469,14 +3370,11 @@ const analytics = getAnalytics(app);
                     syncToFirebase('team', teamObj);
                 }
                 
-                // Update UI
                 loadAdminTeam();
                 loadTeamMembers();
                 updateAdminStats();
                 
-                // Close modal if open
                 closeModal('teamModal');
-                
                 alert('Team member deleted successfully!');
             }
         }
@@ -3484,6 +3382,8 @@ const analytics = getAnalytics(app);
         // ===== ADMIN MESSAGES =====
         function loadAdminMessages() {
             const tbody = document.getElementById('messagesTableBody');
+            if (!tbody) return;
+            
             const messages = JSON.parse(localStorage.getItem('absta_messages') || '[]');
             
             if (messages.length === 0) {
@@ -3524,11 +3424,9 @@ const analytics = getAnalytics(app);
             const message = messages.find(m => m.id == messageId);
             
             if (message) {
-                // Mark as read
                 message.read = true;
                 localStorage.setItem('absta_messages', JSON.stringify(messages));
                 
-                // Sync to Firebase
                 if (isFirebaseInitialized) {
                     const messagesObj = {};
                     messages.forEach((msg, index) => {
@@ -3537,7 +3435,6 @@ const analytics = getAnalytics(app);
                     syncToFirebase('messages', messagesObj);
                 }
                 
-                // Update modal content
                 document.getElementById('modalMessageTitle').textContent = message.subject;
                 document.getElementById('messageFrom').textContent = message.name;
                 document.getElementById('messageEmail').textContent = message.email;
@@ -3545,10 +3442,8 @@ const analytics = getAnalytics(app);
                 document.getElementById('messageContent').textContent = message.message;
                 document.getElementById('messageDate').textContent = new Date(message.date).toLocaleString();
                 
-                // Show modal
                 document.getElementById('messageModal').classList.add('active');
                 
-                // Refresh messages table
                 loadAdminMessages();
                 updateAdminStats();
             }
@@ -3572,7 +3467,6 @@ const analytics = getAnalytics(app);
                 messages = messages.filter(m => m.id != messageId);
                 localStorage.setItem('absta_messages', JSON.stringify(messages));
                 
-                // Sync to Firebase
                 if (isFirebaseInitialized) {
                     const messagesObj = {};
                     messages.forEach((msg, index) => {
@@ -3581,13 +3475,10 @@ const analytics = getAnalytics(app);
                     syncToFirebase('messages', messagesObj);
                 }
                 
-                // Update UI
                 loadAdminMessages();
                 updateAdminStats();
                 
-                // Close modal if open
                 closeModal('messageModal');
-                
                 alert('Message deleted successfully!');
             }
         }
@@ -3596,14 +3487,19 @@ const analytics = getAnalytics(app);
         function loadAdminSettings() {
             const settings = JSON.parse(localStorage.getItem('absta_settings') || '{}');
             
-            document.getElementById('companyName').value = settings.companyName || '';
-            document.getElementById('companyEmail').value = settings.companyEmail || '';
-            document.getElementById('companyPhone').value = settings.companyPhone || '';
-            document.getElementById('companyAddress').value = settings.companyAddress || '';
-            document.getElementById('companyAbout').value = settings.companyAbout || '';
+            const companyName = document.getElementById('companyName');
+            const companyEmail = document.getElementById('companyEmail');
+            const companyPhone = document.getElementById('companyPhone');
+            const companyAddress = document.getElementById('companyAddress');
+            const companyAbout = document.getElementById('companyAbout');
+            
+            if (companyName) companyName.value = settings.companyName || '';
+            if (companyEmail) companyEmail.value = settings.companyEmail || '';
+            if (companyPhone) companyPhone.value = settings.companyPhone || '';
+            if (companyAddress) companyAddress.value = settings.companyAddress || '';
+            if (companyAbout) companyAbout.value = settings.companyAbout || '';
         }
 
-        // Handle settings form submission
         document.getElementById('settingsForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
@@ -3623,12 +3519,10 @@ const analytics = getAnalytics(app);
             
             localStorage.setItem('absta_settings', JSON.stringify(settings));
             
-            // Sync to Firebase
             if (isFirebaseInitialized) {
                 syncToFirebase('settings', settings);
             }
             
-            // Update UI
             loadContactInfo();
             loadFooterData();
             
@@ -3654,7 +3548,6 @@ const analytics = getAnalytics(app);
             }
         }
 
-        // Handle login form submission
         document.getElementById('loginForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
@@ -3667,7 +3560,6 @@ const analytics = getAnalytics(app);
                 currentUser = { username, isAdmin: true };
                 localStorage.setItem('absta_logged_in', JSON.stringify(currentUser));
                 
-                // Redirect to admin panel
                 navigateTo('admin');
                 alert('Login successful!');
             } else {
@@ -3689,7 +3581,7 @@ const analytics = getAnalytics(app);
             const settings = JSON.parse(localStorage.getItem('absta_settings') || '{}');
             const socialLinks = document.getElementById('socialLinks');
             
-            if (settings.social) {
+            if (settings.social && socialLinks) {
                 let socialHTML = '';
                 const socials = [
                     { platform: 'instagram', icon: 'fab fa-instagram' },
@@ -3713,12 +3605,18 @@ const analytics = getAnalytics(app);
         }
 
         function updateCurrentYear() {
-            document.getElementById('currentYear').textContent = new Date().getFullYear();
+            const currentYear = document.getElementById('currentYear');
+            if (currentYear) {
+                currentYear.textContent = new Date().getFullYear();
+            }
         }
 
         // ===== MODAL FUNCTIONS =====
         function closeModal(modalId) {
-            document.getElementById(modalId).classList.remove('active');
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.remove('active');
+            }
             editingProjectId = null;
             editingTeamId = null;
             viewingMessageId = null;
@@ -3733,21 +3631,6 @@ const analytics = getAnalytics(app);
             openTeamModal(id);
         }
 
-        // Initialize contact form when contact page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            if (document.getElementById('contactForm')) {
-                initContactForm();
-            }
-        });
-
-        // Add event listener for portfolio page tabs
-        document.addEventListener('DOMContentLoaded', function() {
-            if (document.getElementById('portfolioTabs')) {
-                initPortfolioTabs();
-            }
-        });
-
-        // Close modals with Escape key
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 document.querySelectorAll('.modal.active').forEach(modal => {
@@ -3756,7 +3639,6 @@ const analytics = getAnalytics(app);
             }
         });
 
-        // Close modals when clicking outside
         document.querySelectorAll('.modal').forEach(modal => {
             modal.addEventListener('click', function(e) {
                 if (e.target === this) {
@@ -3765,7 +3647,6 @@ const analytics = getAnalytics(app);
             });
         });
 
-        // Back to Top Button
         const backToTop = document.createElement('button');
         backToTop.innerHTML = '<i class="fas fa-arrow-up"></i>';
         backToTop.style.cssText = `
@@ -3808,5 +3689,3 @@ const analytics = getAnalytics(app);
     </script>
 </body>
 </html>
-
-
