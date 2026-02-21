@@ -13,6 +13,11 @@
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+    
     <!-- CSS -->
     <style>
         /* ===== ABSTA CREATIVES STYLES ===== */
@@ -91,6 +96,46 @@
         
         @keyframes spin {
             to { transform: rotate(360deg); }
+        }
+        
+        /* ===== SYNC STATUS ===== */
+        #syncStatus {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 50px;
+            padding: 8px 20px;
+            font-size: 0.85rem;
+            color: var(--absta-accent);
+            z-index: 999;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: var(--transition);
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        
+        #syncStatus.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        #syncStatus i {
+            animation: spin 2s linear infinite;
+        }
+        
+        #syncStatus i.fa-check-circle {
+            color: var(--absta-success);
+            animation: none;
+        }
+        
+        #syncStatus i.fa-exclamation-circle {
+            color: #ff3333;
+            animation: none;
         }
         
         /* ===== UTILITY CLASSES ===== */
@@ -1349,6 +1394,12 @@
         </div>
     </div>
 
+    <!-- Sync Status -->
+    <div id="syncStatus">
+        <i class="fas fa-sync-alt"></i>
+        <span>Syncing...</span>
+    </div>
+
     <!-- Navigation -->
     <nav class="navbar">
         <div class="container nav-container">
@@ -2315,6 +2366,174 @@
         let editingProjectId = null;
         let editingTeamId = null;
         let viewingMessageId = null;
+        
+        // Firebase Configuration (BADILISHA HII NA DATA ZAKO ZA FIREBASE)
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            databaseURL: "YOUR_DATABASE_URL",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+        
+        // Initialize Firebase
+        let database;
+        let storage;
+        let isFirebaseInitialized = false;
+
+        // ===== FIREBASE INITIALIZATION =====
+        function initFirebase() {
+            try {
+                // Check if Firebase config is set
+                if (firebaseConfig.apiKey === "YOUR_API_KEY") {
+                    console.warn("Firebase not configured. Using localStorage only.");
+                    showSyncStatus('local', 'Using local storage only');
+                    return false;
+                }
+                
+                // Initialize Firebase
+                firebase.initializeApp(firebaseConfig);
+                database = firebase.database();
+                storage = firebase.storage();
+                isFirebaseInitialized = true;
+                
+                // Start listening for changes
+                listenForChanges();
+                
+                console.log("Firebase initialized successfully");
+                return true;
+            } catch (error) {
+                console.error("Firebase initialization error:", error);
+                showSyncStatus('error', 'Sync unavailable');
+                return false;
+            }
+        }
+
+        // ===== SYNC STATUS =====
+        function showSyncStatus(type, message) {
+            const syncStatus = document.getElementById('syncStatus');
+            const icon = syncStatus.querySelector('i');
+            const span = syncStatus.querySelector('span');
+            
+            syncStatus.classList.add('active');
+            
+            if (type === 'syncing') {
+                icon.className = 'fas fa-sync-alt';
+                span.textContent = 'Syncing...';
+            } else if (type === 'success') {
+                icon.className = 'fas fa-check-circle';
+                span.textContent = 'Synced';
+                
+                // Auto hide after 2 seconds
+                setTimeout(() => {
+                    syncStatus.classList.remove('active');
+                }, 2000);
+            } else if (type === 'error') {
+                icon.className = 'fas fa-exclamation-circle';
+                span.textContent = message || 'Sync failed';
+            } else if (type === 'local') {
+                icon.className = 'fas fa-database';
+                span.textContent = message || 'Using local storage';
+            }
+        }
+
+        // ===== LISTEN FOR CHANGES =====
+        function listenForChanges() {
+            if (!isFirebaseInitialized) return;
+            
+            // Listen for projects changes
+            database.ref('projects').on('value', (snapshot) => {
+                const projects = snapshot.val();
+                if (projects) {
+                    // Convert object to array
+                    const projectsArray = Object.values(projects);
+                    localStorage.setItem('absta_projects', JSON.stringify(projectsArray));
+                    
+                    // Update UI based on current page
+                    updateUIAfterSync();
+                    
+                    showSyncStatus('success', 'Projects updated');
+                }
+            });
+            
+            // Listen for team changes
+            database.ref('team').on('value', (snapshot) => {
+                const team = snapshot.val();
+                if (team) {
+                    const teamArray = Object.values(team);
+                    localStorage.setItem('absta_team', JSON.stringify(teamArray));
+                    
+                    updateUIAfterSync();
+                    
+                    showSyncStatus('success', 'Team updated');
+                }
+            });
+            
+            // Listen for settings changes
+            database.ref('settings').on('value', (snapshot) => {
+                const settings = snapshot.val();
+                if (settings) {
+                    localStorage.setItem('absta_settings', JSON.stringify(settings));
+                    
+                    updateUIAfterSync();
+                    
+                    showSyncStatus('success', 'Settings updated');
+                }
+            });
+            
+            // Listen for messages changes
+            database.ref('messages').on('value', (snapshot) => {
+                const messages = snapshot.val();
+                if (messages) {
+                    const messagesArray = Object.values(messages);
+                    localStorage.setItem('absta_messages', JSON.stringify(messagesArray));
+                    
+                    if (document.getElementById('messages-section').classList.contains('active')) {
+                        loadAdminMessages();
+                    }
+                }
+            });
+        }
+
+        function updateUIAfterSync() {
+            const activePage = document.querySelector('.page.active').id;
+            
+            switch(activePage) {
+                case 'home-page':
+                    loadHomePage();
+                    break;
+                case 'portfolio-page':
+                    loadPortfolioPage();
+                    break;
+                case 'about-page':
+                    loadAboutPage();
+                    break;
+                case 'admin-page':
+                    loadAdminDashboard();
+                    break;
+            }
+        }
+
+        // ===== SYNC TO FIREBASE =====
+        function syncToFirebase(type, data) {
+            if (!isFirebaseInitialized) return;
+            
+            showSyncStatus('syncing', 'Syncing...');
+            
+            const updates = {};
+            updates[type] = data;
+            
+            database.ref().update(updates)
+                .then(() => {
+                    console.log(`${type} synced successfully`);
+                })
+                .catch((error) => {
+                    console.error(`Error syncing ${type}:`, error);
+                    showSyncStatus('error', 'Sync failed');
+                });
+        }
 
         // ===== INITIALIZATION =====
         document.addEventListener('DOMContentLoaded', function() {
@@ -2329,12 +2548,62 @@
             // Initialize all components
             initNavigation();
             initData();
-            loadHomePage();
+            
+            // Try to initialize Firebase
+            const firebaseInit = initFirebase();
+            
+            // If Firebase is initialized, load from Firebase first
+            if (firebaseInit) {
+                loadFromFirebase();
+            } else {
+                loadHomePage();
+            }
+            
             updateCurrentYear();
             
             // Check if user is logged in
             checkLoginStatus();
         });
+
+        function loadFromFirebase() {
+            if (!isFirebaseInitialized) {
+                loadHomePage();
+                return;
+            }
+            
+            showSyncStatus('syncing', 'Loading data...');
+            
+            // Load all data from Firebase
+            Promise.all([
+                database.ref('projects').once('value'),
+                database.ref('team').once('value'),
+                database.ref('settings').once('value'),
+                database.ref('messages').once('value')
+            ]).then(([projectsSnap, teamSnap, settingsSnap, messagesSnap]) => {
+                if (projectsSnap.val()) {
+                    localStorage.setItem('absta_projects', JSON.stringify(Object.values(projectsSnap.val())));
+                }
+                
+                if (teamSnap.val()) {
+                    localStorage.setItem('absta_team', JSON.stringify(Object.values(teamSnap.val())));
+                }
+                
+                if (settingsSnap.val()) {
+                    localStorage.setItem('absta_settings', JSON.stringify(settingsSnap.val()));
+                }
+                
+                if (messagesSnap.val()) {
+                    localStorage.setItem('absta_messages', JSON.stringify(Object.values(messagesSnap.val())));
+                }
+                
+                loadHomePage();
+                showSyncStatus('success', 'Data loaded');
+            }).catch(error => {
+                console.error("Error loading from Firebase:", error);
+                loadHomePage();
+                showSyncStatus('error', 'Using local data');
+            });
+        }
 
         // ===== NAVIGATION =====
         function initNavigation() {
@@ -2498,6 +2767,12 @@
         function handleImageUpload(input, previewId, hiddenInputId) {
             const file = input.files[0];
             if (!file) return;
+            
+            // Check file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('File is too large! Maximum size is 5MB.');
+                return;
+            }
             
             // Show file name
             const fileNameElement = document.getElementById(input.id.replace('Upload', 'FileName'));
@@ -2743,10 +3018,19 @@
                         read: false
                     };
                     
-                    // Save message
+                    // Save message to localStorage
                     const messages = JSON.parse(localStorage.getItem('absta_messages') || '[]');
                     messages.unshift(message);
                     localStorage.setItem('absta_messages', JSON.stringify(messages));
+                    
+                    // Sync to Firebase
+                    if (isFirebaseInitialized) {
+                        const messagesObj = {};
+                        messages.forEach((msg, index) => {
+                            messagesObj[msg.id] = msg;
+                        });
+                        syncToFirebase('messages', messagesObj);
+                    }
                     
                     // Show success message
                     alert('Thank you for your message! We will get back to you soon.');
@@ -2949,6 +3233,15 @@
             
             localStorage.setItem('absta_projects', JSON.stringify(projects));
             
+            // Sync to Firebase
+            if (isFirebaseInitialized) {
+                const projectsObj = {};
+                projects.forEach((proj, index) => {
+                    projectsObj[proj.id] = proj;
+                });
+                syncToFirebase('projects', projectsObj);
+            }
+            
             // Update UI
             loadAdminProjects();
             loadAllProjects();
@@ -2971,6 +3264,15 @@
                 let projects = JSON.parse(localStorage.getItem('absta_projects') || '[]');
                 projects = projects.filter(p => p.id != projectId);
                 localStorage.setItem('absta_projects', JSON.stringify(projects));
+                
+                // Sync to Firebase
+                if (isFirebaseInitialized) {
+                    const projectsObj = {};
+                    projects.forEach((proj, index) => {
+                        projectsObj[proj.id] = proj;
+                    });
+                    syncToFirebase('projects', projectsObj);
+                }
                 
                 // Update UI
                 loadAdminProjects();
@@ -3117,6 +3419,15 @@
             
             localStorage.setItem('absta_team', JSON.stringify(team));
             
+            // Sync to Firebase
+            if (isFirebaseInitialized) {
+                const teamObj = {};
+                team.forEach((mem, index) => {
+                    teamObj[mem.id] = mem;
+                });
+                syncToFirebase('team', teamObj);
+            }
+            
             // Update UI
             loadAdminTeam();
             loadTeamMembers();
@@ -3137,6 +3448,15 @@
                 let team = JSON.parse(localStorage.getItem('absta_team') || '[]');
                 team = team.filter(m => m.id != memberId);
                 localStorage.setItem('absta_team', JSON.stringify(team));
+                
+                // Sync to Firebase
+                if (isFirebaseInitialized) {
+                    const teamObj = {};
+                    team.forEach((mem, index) => {
+                        teamObj[mem.id] = mem;
+                    });
+                    syncToFirebase('team', teamObj);
+                }
                 
                 // Update UI
                 loadAdminTeam();
@@ -3197,6 +3517,15 @@
                 message.read = true;
                 localStorage.setItem('absta_messages', JSON.stringify(messages));
                 
+                // Sync to Firebase
+                if (isFirebaseInitialized) {
+                    const messagesObj = {};
+                    messages.forEach((msg, index) => {
+                        messagesObj[msg.id] = msg;
+                    });
+                    syncToFirebase('messages', messagesObj);
+                }
+                
                 // Update modal content
                 document.getElementById('modalMessageTitle').textContent = message.subject;
                 document.getElementById('messageFrom').textContent = message.name;
@@ -3231,6 +3560,15 @@
                 let messages = JSON.parse(localStorage.getItem('absta_messages') || '[]');
                 messages = messages.filter(m => m.id != messageId);
                 localStorage.setItem('absta_messages', JSON.stringify(messages));
+                
+                // Sync to Firebase
+                if (isFirebaseInitialized) {
+                    const messagesObj = {};
+                    messages.forEach((msg, index) => {
+                        messagesObj[msg.id] = msg;
+                    });
+                    syncToFirebase('messages', messagesObj);
+                }
                 
                 // Update UI
                 loadAdminMessages();
@@ -3273,6 +3611,11 @@
             };
             
             localStorage.setItem('absta_settings', JSON.stringify(settings));
+            
+            // Sync to Firebase
+            if (isFirebaseInitialized) {
+                syncToFirebase('settings', settings);
+            }
             
             // Update UI
             loadContactInfo();
