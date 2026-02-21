@@ -598,6 +598,7 @@
             background: var(--gradient);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
         
         .price-period {
@@ -837,6 +838,64 @@
         textarea.form-control {
             min-height: 150px;
             resize: vertical;
+        }
+
+        /* ===== FILE UPLOAD STYLES ===== */
+        .file-upload-container {
+            margin-bottom: 15px;
+        }
+        
+        .file-upload-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 20px;
+            background: var(--glass-bg);
+            border: 2px dashed var(--absta-primary);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: var(--transition);
+            color: var(--absta-light);
+        }
+        
+        .file-upload-label:hover {
+            background: rgba(255, 51, 102, 0.1);
+            border-color: var(--absta-accent);
+        }
+        
+        .file-upload-label i {
+            font-size: 1.2rem;
+            color: var(--absta-primary);
+        }
+        
+        .file-upload-input {
+            display: none;
+        }
+        
+        .image-preview {
+            margin-top: 15px;
+            border-radius: 10px;
+            overflow: hidden;
+            max-width: 200px;
+            border: 1px solid var(--glass-border);
+            display: none;
+        }
+        
+        .image-preview.active {
+            display: block;
+        }
+        
+        .image-preview img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        .file-name {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: var(--absta-gray);
+            word-break: break-all;
         }
         
         /* ===== ADMIN PANEL ===== */
@@ -1872,6 +1931,7 @@
                                     <th>Title</th>
                                     <th>Category</th>
                                     <th>Date</th>
+                                    <th>Image</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -1898,6 +1958,7 @@
                                     <th>Name</th>
                                     <th>Role</th>
                                     <th>Email</th>
+                                    <th>Image</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -2095,12 +2156,23 @@
                     
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="projectImage">Image URL</label>
-                            <input type="text" id="projectImage" class="form-control" placeholder="https://example.com/image.jpg">
-                        </div>
-                        <div class="form-group">
                             <label for="projectDate">Date</label>
                             <input type="date" id="projectDate" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Project Image</label>
+                            <div class="file-upload-container">
+                                <label for="projectImageUpload" class="file-upload-label">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <span id="uploadButtonText">Choose Image from Device</span>
+                                </label>
+                                <input type="file" id="projectImageUpload" class="file-upload-input" accept="image/*" onchange="handleImageUpload(this, 'projectImagePreview', 'projectImageData')">
+                                <input type="hidden" id="projectImageData" name="projectImageData">
+                            </div>
+                            <div class="image-preview" id="projectImagePreview">
+                                <img src="" alt="Preview">
+                            </div>
+                            <div class="file-name" id="projectFileName"></div>
                         </div>
                     </div>
                     
@@ -2149,8 +2221,19 @@
                             <input type="email" id="teamEmail" class="form-control">
                         </div>
                         <div class="form-group">
-                            <label for="teamImage">Image URL</label>
-                            <input type="text" id="teamImage" class="form-control" placeholder="https://example.com/image.jpg">
+                            <label>Profile Image</label>
+                            <div class="file-upload-container">
+                                <label for="teamImageUpload" class="file-upload-label">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <span id="teamUploadButtonText">Choose Image from Device</span>
+                                </label>
+                                <input type="file" id="teamImageUpload" class="file-upload-input" accept="image/*" onchange="handleImageUpload(this, 'teamImagePreview', 'teamImageData')">
+                                <input type="hidden" id="teamImageData" name="teamImageData">
+                            </div>
+                            <div class="image-preview" id="teamImagePreview">
+                                <img src="" alt="Preview">
+                            </div>
+                            <div class="file-name" id="teamFileName"></div>
                         </div>
                     </div>
                     
@@ -2304,6 +2387,9 @@
                     case 'about':
                         loadAboutPage();
                         break;
+                    case 'contact':
+                        loadContactPage();
+                        break;
                     case 'admin':
                         checkAdminAccess();
                         break;
@@ -2406,6 +2492,39 @@
                 };
                 localStorage.setItem('absta_admin', JSON.stringify(adminUser));
             }
+        }
+
+        // ===== FILE UPLOAD HANDLER =====
+        function handleImageUpload(input, previewId, hiddenInputId) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            // Show file name
+            const fileNameElement = document.getElementById(input.id.replace('Upload', 'FileName'));
+            if (fileNameElement) {
+                fileNameElement.textContent = `Selected: ${file.name}`;
+            }
+            
+            // Update upload button text
+            const buttonText = document.getElementById(input.id.replace('Upload', 'UploadButtonText'));
+            if (buttonText) {
+                buttonText.textContent = 'Change Image';
+            }
+            
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                // Set preview image
+                const preview = document.getElementById(previewId);
+                const previewImg = preview.querySelector('img');
+                previewImg.src = e.target.result;
+                preview.classList.add('active');
+                
+                // Set hidden input value with base64 data
+                document.getElementById(hiddenInputId).value = e.target.result;
+            };
+            
+            reader.readAsDataURL(file);
         }
 
         // ===== HOME PAGE =====
@@ -2716,7 +2835,7 @@
             if (projects.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="4" style="text-align: center; padding: 40px; color: var(--absta-gray);">
+                        <td colspan="5" style="text-align: center; padding: 40px; color: var(--absta-gray);">
                             <i class="fas fa-video-slash" style="font-size: 2rem; margin-bottom: 10px; display: block;"></i>
                             <p>No projects added yet</p>
                         </td>
@@ -2730,6 +2849,9 @@
                     <td style="color: white;">${project.title}</td>
                     <td><span class="portfolio-category">${project.category}</span></td>
                     <td>${new Date(project.date).toLocaleDateString()}</td>
+                    <td>
+                        <img src="${project.image}" alt="${project.title}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px;">
+                    </td>
                     <td>
                         <div class="table-actions">
                             <button class="action-btn edit-btn" onclick="editProject(${project.id})">
@@ -2749,6 +2871,12 @@
             const form = document.getElementById('projectForm');
             const deleteBtn = document.getElementById('deleteProjectBtn');
             
+            // Reset file upload UI
+            document.getElementById('projectImagePreview').classList.remove('active');
+            document.getElementById('projectFileName').textContent = '';
+            document.getElementById('uploadButtonText').textContent = 'Choose Image from Device';
+            document.getElementById('projectImageData').value = '';
+            
             if (projectId) {
                 // Edit mode
                 editingProjectId = projectId;
@@ -2761,8 +2889,18 @@
                     document.getElementById('projectTitle').value = project.title;
                     document.getElementById('projectCategory').value = project.category;
                     document.getElementById('projectDescription').value = project.description;
-                    document.getElementById('projectImage').value = project.image || '';
                     document.getElementById('projectDate').value = project.date;
+                    
+                    // Show existing image
+                    if (project.image) {
+                        const preview = document.getElementById('projectImagePreview');
+                        const previewImg = preview.querySelector('img');
+                        previewImg.src = project.image;
+                        preview.classList.add('active');
+                        document.getElementById('projectImageData').value = project.image;
+                        document.getElementById('uploadButtonText').textContent = 'Change Image';
+                    }
+                    
                     deleteBtn.style.display = 'inline-flex';
                 }
             } else {
@@ -2781,12 +2919,21 @@
         document.getElementById('projectForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
+            // Get image data
+            let imageData = document.getElementById('projectImageData').value;
+            
+            // If no image uploaded, use default based on category
+            if (!imageData) {
+                const category = document.getElementById('projectCategory').value;
+                imageData = getDefaultImage(category);
+            }
+            
             const project = {
                 id: editingProjectId || Date.now(),
                 title: document.getElementById('projectTitle').value,
                 category: document.getElementById('projectCategory').value,
                 description: document.getElementById('projectDescription').value,
-                image: document.getElementById('projectImage').value || getDefaultImage(document.getElementById('projectCategory').value),
+                image: imageData,
                 date: document.getElementById('projectDate').value
             };
             
@@ -2858,7 +3005,7 @@
             if (team.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="4" style="text-align: center; padding: 40px; color: var(--absta-gray);">
+                        <td colspan="5" style="text-align: center; padding: 40px; color: var(--absta-gray);">
                             <i class="fas fa-users" style="font-size: 2rem; margin-bottom: 10px; display: block;"></i>
                             <p>No team members added yet</p>
                         </td>
@@ -2872,6 +3019,9 @@
                     <td style="color: white;">${member.name}</td>
                     <td>${member.role}</td>
                     <td>${member.email}</td>
+                    <td>
+                        <img src="${member.image}" alt="${member.name}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px;">
+                    </td>
                     <td>
                         <div class="table-actions">
                             <button class="action-btn edit-btn" onclick="editTeamMember(${member.id})">
@@ -2891,6 +3041,12 @@
             const form = document.getElementById('teamForm');
             const deleteBtn = document.getElementById('deleteTeamBtn');
             
+            // Reset file upload UI
+            document.getElementById('teamImagePreview').classList.remove('active');
+            document.getElementById('teamFileName').textContent = '';
+            document.getElementById('teamUploadButtonText').textContent = 'Choose Image from Device';
+            document.getElementById('teamImageData').value = '';
+            
             if (memberId) {
                 // Edit mode
                 editingTeamId = memberId;
@@ -2903,8 +3059,18 @@
                     document.getElementById('teamName').value = member.name;
                     document.getElementById('teamRole').value = member.role;
                     document.getElementById('teamEmail').value = member.email || '';
-                    document.getElementById('teamImage').value = member.image || '';
                     document.getElementById('teamBio').value = member.bio;
+                    
+                    // Show existing image
+                    if (member.image) {
+                        const preview = document.getElementById('teamImagePreview');
+                        const previewImg = preview.querySelector('img');
+                        previewImg.src = member.image;
+                        preview.classList.add('active');
+                        document.getElementById('teamImageData').value = member.image;
+                        document.getElementById('teamUploadButtonText').textContent = 'Change Image';
+                    }
+                    
                     deleteBtn.style.display = 'inline-flex';
                 }
             } else {
@@ -2922,12 +3088,20 @@
         document.getElementById('teamForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
+            // Get image data
+            let imageData = document.getElementById('teamImageData').value;
+            
+            // If no image uploaded, use default
+            if (!imageData) {
+                imageData = 'https://images.unsplash.com/photo-1494790108755-2616b786d4d9?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80';
+            }
+            
             const member = {
                 id: editingTeamId || Date.now(),
                 name: document.getElementById('teamName').value,
                 role: document.getElementById('teamRole').value,
                 email: document.getElementById('teamEmail').value,
-                image: document.getElementById('teamImage').value || 'https://images.unsplash.com/photo-1494790108755-2616b786d4d9?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
+                image: imageData,
                 bio: document.getElementById('teamBio').value
             };
             
@@ -3279,5 +3453,4 @@
         });
     </script>
 </body>
-
 </html>
