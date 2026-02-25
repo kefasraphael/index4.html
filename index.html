@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html>  
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -61,6 +61,112 @@
             padding: 0 20px;
         }
         
+        /* ===== IMAGE MODAL / LIGHTBOX ===== */
+.image-modal {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    padding-top: 50px;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.95);
+    backdrop-filter: blur(10px);
+}
+
+.image-modal-content {
+    margin: auto;
+    display: block;
+    max-width: 90%;
+    max-height: 80vh;
+    object-fit: contain;
+    border-radius: 10px;
+    border: 2px solid var(--glass-border);
+    box-shadow: var(--shadow-lg);
+    animation: zoomIn 0.3s ease;
+}
+
+@keyframes zoomIn {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.image-modal-close {
+    position: absolute;
+    top: 20px;
+    right: 35px;
+    color: #f1f1f1;
+    font-size: 40px;
+    font-weight: bold;
+    transition: 0.3s;
+    cursor: pointer;
+    z-index: 10000;
+}
+
+.image-modal-close:hover,
+.image-modal-close:focus {
+    color: var(--absta-primary);
+    transform: rotate(90deg);
+}
+
+#modalCaption {
+    margin: auto;
+    display: block;
+    width: 80%;
+    max-width: 700px;
+    text-align: center;
+    color: #ccc;
+    padding: 20px 0;
+    font-size: 1.1rem;
+}
+
+.image-modal-nav {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    transform: translateY(-50%);
+    display: flex;
+    justify-content: space-between;
+    padding: 0 20px;
+    pointer-events: none;
+}
+
+.image-modal-nav .nav-btn {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    color: white;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    transition: var(--transition);
+    backdrop-filter: blur(5px);
+    pointer-events: auto;
+}
+
+.image-modal-nav .nav-btn:hover {
+    background: var(--gradient);
+    border-color: transparent;
+    transform: scale(1.1);
+}
+
+/* Add pointer cursor to images */
+.portfolio-image img,
+.team-image img {
+    cursor: pointer;
+    transition: transform 0.3s;
+}
+
+.portfolio-item:hover .portfolio-image img {
+    transform: scale(1.05);
+}
         /* ===== LOADING ANIMATION ===== */
         #loader {
             position: fixed;
@@ -1367,6 +1473,16 @@
     </style>
 </head>
 <body>
+    <!-- Image Lightbox Modal -->
+<div id="imageModal" class="image-modal">
+    <span class="image-modal-close">&times;</span>
+    <img class="image-modal-content" id="modalImage">
+    <div id="modalCaption"></div>
+    <div class="image-modal-nav">
+        <button class="nav-btn" id="prevImageBtn"><i class="fas fa-chevron-left"></i></button>
+        <button class="nav-btn" id="nextImageBtn"><i class="fas fa-chevron-right"></i></button>
+    </div>
+</div>
     <!-- Loading Screen -->
     <div id="loader">
         <div class="loader-content">
@@ -2307,6 +2423,159 @@
 
     <!-- JavaScript -->
     <script>
+        // ===== IMAGE LIGHTBOX =====
+let currentImageIndex = 0;
+let currentImageArray = [];
+
+function initLightbox() {
+    const modal = document.getElementById('imageModal');
+    const modalImg = document.getElementById('modalImage');
+    const captionText = document.getElementById('modalCaption');
+    const closeBtn = document.querySelector('.image-modal-close');
+    const prevBtn = document.getElementById('prevImageBtn');
+    const nextBtn = document.getElementById('nextImageBtn');
+
+    // Close modal
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+    }
+
+    // Navigate images
+    if (prevBtn) {
+        prevBtn.addEventListener('click', () => {
+            if (currentImageArray.length > 0) {
+                currentImageIndex = (currentImageIndex - 1 + currentImageArray.length) % currentImageArray.length;
+                modalImg.src = currentImageArray[currentImageIndex].src;
+                captionText.innerHTML = currentImageArray[currentImageIndex].caption;
+            }
+        });
+    }
+
+    if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+            if (currentImageArray.length > 0) {
+                currentImageIndex = (currentImageIndex + 1) % currentImageArray.length;
+                modalImg.src = currentImageArray[currentImageIndex].src;
+                captionText.innerHTML = currentImageArray[currentImageIndex].caption;
+            }
+        });
+    }
+
+    // Click outside to close
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+        if (modal.style.display === 'block') {
+            if (e.key === 'Escape') {
+                modal.style.display = 'none';
+            } else if (e.key === 'ArrowLeft') {
+                prevBtn.click();
+            } else if (e.key === 'ArrowRight') {
+                nextBtn.click();
+            }
+        }
+    });
+}
+
+// Function to open lightbox
+function openLightbox(element) {
+    const modal = document.getElementById('imageModal');
+    const modalImg = document.getElementById('modalImage');
+    const captionText = document.getElementById('modalCaption');
+
+    // Get all images from the same page/context
+    const allImages = [];
+    
+    if (element.closest('.portfolio-grid')) {
+        // If from portfolio
+        document.querySelectorAll('.portfolio-image img').forEach((img, index) => {
+            allImages.push({
+                src: img.src,
+                caption: img.alt || 'Portfolio Image'
+            });
+            if (img === element) currentImageIndex = index;
+        });
+    } else if (element.closest('.team-grid')) {
+        // If from team
+        document.querySelectorAll('.team-image img').forEach((img, index) => {
+            allImages.push({
+                src: img.src,
+                caption: img.alt || 'Team Member'
+            });
+            if (img === element) currentImageIndex = index;
+        });
+    } else {
+        // Single image
+        allImages.push({
+            src: element.src,
+            caption: element.alt || 'Image'
+        });
+        currentImageIndex = 0;
+    }
+
+    currentImageArray = allImages;
+
+    modal.style.display = 'block';
+    modalImg.src = element.src;
+    captionText.innerHTML = element.alt || 'Image';
+}
+
+// Add click event to all images
+function addImageClickListeners() {
+    // Portfolio images
+    document.querySelectorAll('.portfolio-image img').forEach(img => {
+        img.addEventListener('click', function(e) {
+            e.stopPropagation();
+            openLightbox(this);
+        });
+    });
+
+    // Team images
+    document.querySelectorAll('.team-image img').forEach(img => {
+        img.addEventListener('click', function(e) {
+            e.stopPropagation();
+            openLightbox(this);
+        });
+    });
+}
+
+// Call this after loading content dynamically
+function refreshImageListeners() {
+    addImageClickListeners();
+}
+
+// Modify your existing load functions to call refreshImageListeners
+const originalLoadHomePage = loadHomePage;
+loadHomePage = function() {
+    originalLoadHomePage();
+    setTimeout(refreshImageListeners, 100);
+};
+
+const originalLoadPortfolioPage = loadPortfolioPage;
+loadPortfolioPage = function() {
+    originalLoadPortfolioPage();
+    setTimeout(refreshImageListeners, 100);
+};
+
+const originalLoadAboutPage = loadAboutPage;
+loadAboutPage = function() {
+    originalLoadAboutPage();
+    setTimeout(refreshImageListeners, 100);
+};
+
+// Initialize lightbox on DOM load
+document.addEventListener('DOMContentLoaded', function() {
+    // ... existing code ...
+    initLightbox();
+    setTimeout(refreshImageListeners, 500);
+});
         // ===== GLOBAL VARIABLES =====
         let currentUser = null;
         let editingProjectId = null;
@@ -3689,3 +3958,4 @@
     </script>
 </body>
 </html>
+
