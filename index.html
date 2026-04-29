@@ -1649,6 +1649,47 @@ body::after {
     .team-grid {
         grid-template-columns: repeat(2, 1fr);
     }
+   /* Category Manager Styles */
+.category-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.category-badge {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 50px;
+    padding: 8px 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9rem;
+    transition: var(--transition);
+}
+
+.category-badge span {
+    color: var(--absta-light);
+}
+
+.category-badge i {
+    color: var(--absta-primary);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.category-badge i:hover {
+    color: #ff3333;
+    transform: scale(1.1);
+}
+
+.add-category-form {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+} 
 }
     </style>
 </head>
@@ -2216,6 +2257,8 @@ body::after {
                 <div class="admin-tab active" onclick="showAdminSection('projects')">Projects</div>
                 <div class="admin-tab" onclick="showAdminSection('team')">Team</div>
                 <div class="admin-tab" onclick="showAdminSection('messages')">Messages</div>
+                <div class="admin-tab" onclick="showAdminSection('pricing')">Pricing</div>
+                 <div class="admin-tab" onclick="showAdminSection('services')">Services</div>
                 <div class="admin-tab" onclick="showAdminSection('settings')">Settings</div>
                 <div class="admin-tab" onclick="logout()" style="margin-left: auto; background: #ff3333;">
                     <i class="fas fa-sign-out-alt"></i> Logout
@@ -2292,6 +2335,20 @@ body::after {
                 
                 <div id="settings-section" class="admin-section">
                     <h3 style="color: white; margin-bottom: 30px;">Website Settings</h3>
+                       <!-- Category Manager -->
+    <div style="margin-bottom: 40px; padding: 20px; background: var(--glass-bg); border-radius: 15px;">
+        <h4 style="color: white; margin-bottom: 20px;">Manage Portfolio Categories</h4>
+        <div id="categoryList" class="category-list"></div>
+        <div class="add-category-form">
+            <input type="text" id="newCategoryName" class="form-control" placeholder="New category name" style="flex: 1;">
+            <input type="text" id="newCategoryValue" class="form-control" placeholder="Category value (e.g., fashion)" style="flex: 1;">
+            <button type="button" class="btn btn-primary" onclick="addNewCategory()">
+                <i class="fas fa-plus"></i> Add Category
+            </button>
+        </div>
+    </div>
+    
+    <h4 style="color: white; margin-bottom: 20px;">General Settings</h4>
                     
                     <form id="settingsForm">
                         <div class="form-row">
@@ -2330,6 +2387,57 @@ body::after {
                             </button>
                         </div>
                     </form>
+                    <!-- Price Plans Manager -->
+<div id="pricing-section" class="admin-section">
+    <h3 style="color: white; margin-bottom: 30px;">Manage Pricing Plans</h3>
+    
+    <div id="pricingPlansList"></div>
+    
+    <button class="btn btn-primary" onclick="openPricingModal()" style="margin-top: 20px;">
+        <i class="fas fa-plus"></i> Add New Plan
+    </button>
+</div>
+             <!-- Pricing Modal -->
+<div class="modal" id="pricingModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modalPricingTitle">Add Pricing Plan</h3>
+            <button class="modal-close" onclick="closeModal('pricingModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="pricingForm">
+                <input type="hidden" id="pricingId">
+                <div class="form-group">
+                    <label>Plan Name</label>
+                    <input type="text" id="pricingName" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Price (e.g., $999)</label>
+                    <input type="text" id="pricingPrice" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Features (one per line)</label>
+                    <textarea id="pricingFeatures" class="form-control" rows="5" required placeholder="2-3 Minute Video&#10;1 Day Shooting&#10;Basic Editing&#10;1 Revision"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Popular?</label>
+                    <select id="pricingPopular" class="form-control">
+                        <option value="false">No</option>
+                        <option value="true">Yes (Most Popular)</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-success">Save Plan</button>
+                    <button type="button" class="btn btn-outline" onclick="closeModal('pricingModal')">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="deletePricingBtn" style="display: none;" onclick="deletePricingPlan()">Delete Plan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+                    
                 </div>
             </div>
         </div>
@@ -3153,6 +3261,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 };
                 localStorage.setItem('absta_settings', JSON.stringify(defaultSettings));
             }
+            if (!localStorage.getItem('absta_categories')) {
+    const defaultCategories = [
+        { name: 'Wedding Films', value: 'wedding' },
+        { name: 'Commercial', value: 'commercial' },
+        { name: 'Music Videos', value: 'music' },
+        { name: 'Documentary', value: 'documentary' },
+        { name: 'Photography', value: 'photography' }
+    ];
+    localStorage.setItem('absta_categories', JSON.stringify(defaultCategories));
+}
             
             if (!localStorage.getItem('absta_admin')) {
                 const adminUser = {
@@ -3987,6 +4105,117 @@ document.addEventListener('DOMContentLoaded', function() {
                 loadFooterData();
                 alert('Settings reset to default!');
             }
+            // ===== CATEGORY MANAGEMENT =====
+function loadCategories() {
+    const categories = JSON.parse(localStorage.getItem('absta_categories') || '[]');
+    const categoryList = document.getElementById('categoryList');
+    if (!categoryList) return;
+    
+    if (categories.length === 0) {
+        // Load default categories
+        const defaultCategories = [
+            { name: 'Wedding Films', value: 'wedding' },
+            { name: 'Commercial', value: 'commercial' },
+            { name: 'Music Videos', value: 'music' },
+            { name: 'Documentary', value: 'documentary' },
+            { name: 'Photography', value: 'photography' }
+        ];
+        localStorage.setItem('absta_categories', JSON.stringify(defaultCategories));
+        loadCategories();
+        return;
+    }
+    
+    categoryList.innerHTML = categories.map(cat => `
+        <div class="category-badge">
+            <span>${cat.name}</span>
+            <i class="fas fa-times" onclick="deleteCategory('${cat.value}')" title="Delete category"></i>
+        </div>
+    `).join('');
+    
+    // Update category dropdowns
+    updateCategoryDropdowns();
+}
+
+function updateCategoryDropdowns() {
+    const categories = JSON.parse(localStorage.getItem('absta_categories') || '[]');
+    const allSelects = document.querySelectorAll('#projectCategory, #projectCategoryFilter');
+    
+    allSelects.forEach(select => {
+        if (select) {
+            const currentValue = select.value;
+            select.innerHTML = categories.map(cat => 
+                `<option value="${cat.value}" ${currentValue === cat.value ? 'selected' : ''}>${cat.name}</option>`
+            ).join('');
+        }
+    });
+}
+
+function addNewCategory() {
+    const nameInput = document.getElementById('newCategoryName');
+    const valueInput = document.getElementById('newCategoryValue');
+    
+    const name = nameInput.value.trim();
+    const value = valueInput.value.trim().toLowerCase().replace(/\s+/g, '_');
+    
+    if (!name || !value) {
+        alert('Please enter both category name and value');
+        return;
+    }
+    
+    let categories = JSON.parse(localStorage.getItem('absta_categories') || '[]');
+    
+    if (categories.some(cat => cat.value === value)) {
+        alert('Category with this value already exists');
+        return;
+    }
+    
+    categories.push({ name, value });
+    localStorage.setItem('absta_categories', JSON.stringify(categories));
+    
+    if (isFirebaseInitialized) {
+        syncToFirebase('categories', categories);
+    }
+    
+    nameInput.value = '';
+    valueInput.value = '';
+    
+    loadCategories();
+    alert('Category added successfully!');
+}
+
+function deleteCategory(categoryValue) {
+    if (confirm(`Are you sure you want to delete this category? Projects with this category will still show but won't be filterable.`)) {
+        let categories = JSON.parse(localStorage.getItem('absta_categories') || '[]');
+        categories = categories.filter(cat => cat.value !== categoryValue);
+        localStorage.setItem('absta_categories', JSON.stringify(categories));
+        
+        if (isFirebaseInitialized) {
+            syncToFirebase('categories', categories);
+        }
+        
+        loadCategories();
+        alert('Category deleted successfully!');
+    }
+}
+    function loadAdminSettings() {
+    const settings = JSON.parse(localStorage.getItem('absta_settings') || '{}');
+    
+    const companyName = document.getElementById('companyName');
+    const companyEmail = document.getElementById('companyEmail');
+    const companyPhone = document.getElementById('companyPhone');
+    const companyAddress = document.getElementById('companyAddress');
+    const companyAbout = document.getElementById('companyAbout');
+    
+    if (companyName) companyName.value = settings.companyName || '';
+    if (companyEmail) companyEmail.value = settings.companyEmail || '';
+    if (companyPhone) companyPhone.value = settings.companyPhone || '';
+    if (companyAddress) companyAddress.value = settings.companyAddress || '';
+    if (companyAbout) companyAbout.value = settings.companyAbout || '';
+    
+    // Load categories
+    loadCategories();
+}
+            
         }
 
         // ===== LOGIN SYSTEM =====
@@ -4134,6 +4363,180 @@ document.addEventListener('DOMContentLoaded', function() {
                 backToTop.style.opacity = '0';
                 backToTop.style.visibility = 'hidden';
             }
+            // ===== PRICING PLANS MANAGEMENT =====
+let editingPricingId = null;
+
+function loadPricingPlans() {
+    const pricingPlans = JSON.parse(localStorage.getItem('absta_pricing') || '[]');
+    const container = document.getElementById('pricingPlansList');
+    if (!container) return;
+    
+    if (pricingPlans.length === 0) {
+        const defaultPlans = [
+            {
+                id: 1,
+                name: 'Basic',
+                price: '$999',
+                features: ['2-3 Minute Video', '1 Day Shooting', 'Basic Editing', '1 Revision'],
+                popular: false
+            },
+            {
+                id: 2,
+                name: 'Professional',
+                price: '$2,499',
+                features: ['3-5 Minute Video', '2 Days Shooting', 'Advanced Editing', '3 Revisions', 'Drone Footage'],
+                popular: true
+            },
+            {
+                id: 3,
+                name: 'Premium',
+                price: '$4,999',
+                features: ['5-10 Minute Video', '3+ Days Shooting', 'Cinematic Editing', 'Unlimited Revisions', 'Drone + Special Effects'],
+                popular: false
+            }
+        ];
+        localStorage.setItem('absta_pricing', JSON.stringify(defaultPlans));
+        loadPricingPlans();
+        return;
+    }
+    
+    container.innerHTML = `
+        <div class="pricing-grid">
+            ${pricingPlans.map(plan => `
+                <div class="pricing-card ${plan.popular ? 'popular' : ''}" style="position: relative;">
+                    ${plan.popular ? '<div class="popular-badge">MOST POPULAR</div>' : ''}
+                    <h3>${plan.name}</h3>
+                    <div class="price">${plan.price}</div>
+                    <ul class="pricing-features">
+                        ${plan.features.map(f => `<li><i class="fas fa-check"></i> ${f}</li>`).join('')}
+                    </ul>
+                    <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+                        <button class="btn btn-primary" style="padding: 8px 20px;" onclick="editPricingPlan(${plan.id})">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        <button class="btn btn-danger" style="padding: 8px 20px;" onclick="deletePricingPlan(${plan.id})">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+    
+    // Update public pricing page
+    updatePublicPricing();
+}
+
+function openPricingModal(planId = null) {
+    const modal = document.getElementById('pricingModal');
+    const form = document.getElementById('pricingForm');
+    const deleteBtn = document.getElementById('deletePricingBtn');
+    
+    if (planId) {
+        editingPricingId = planId;
+        const plans = JSON.parse(localStorage.getItem('absta_pricing') || '[]');
+        const plan = plans.find(p => p.id == planId);
+        
+        if (plan) {
+            document.getElementById('modalPricingTitle').textContent = 'Edit Pricing Plan';
+            document.getElementById('pricingId').value = plan.id;
+            document.getElementById('pricingName').value = plan.name;
+            document.getElementById('pricingPrice').value = plan.price;
+            document.getElementById('pricingFeatures').value = plan.features.join('\n');
+            document.getElementById('pricingPopular').value = plan.popular ? 'true' : 'false';
+            deleteBtn.style.display = 'inline-flex';
+        }
+    } else {
+        editingPricingId = null;
+        document.getElementById('modalPricingTitle').textContent = 'Add Pricing Plan';
+        form.reset();
+        deleteBtn.style.display = 'none';
+    }
+    
+    modal.classList.add('active');
+}
+
+function editPricingPlan(id) {
+    openPricingModal(id);
+}
+
+function deletePricingPlan(planId = null) {
+    if (!planId) planId = editingPricingId;
+    if (!planId) return;
+    
+    if (confirm('Are you sure you want to delete this pricing plan?')) {
+        let plans = JSON.parse(localStorage.getItem('absta_pricing') || '[]');
+        plans = plans.filter(p => p.id != planId);
+        localStorage.setItem('absta_pricing', JSON.stringify(plans));
+        
+        if (isFirebaseInitialized) {
+            const plansObj = {};
+            plans.forEach((plan, index) => {
+                plansObj[plan.id] = plan;
+            });
+            syncToFirebase('pricing', plansObj);
+        }
+        
+        loadPricingPlans();
+        closeModal('pricingModal');
+        alert('Pricing plan deleted successfully!');
+    }
+}
+
+function updatePublicPricing() {
+    const pricingGrid = document.querySelector('.pricing-grid');
+    if (!pricingGrid) return;
+    
+    const plans = JSON.parse(localStorage.getItem('absta_pricing') || '[]');
+    
+    pricingGrid.innerHTML = plans.map(plan => `
+        <div class="pricing-card ${plan.popular ? 'popular' : ''}">
+            ${plan.popular ? '<div class="popular-badge">MOST POPULAR</div>' : ''}
+            <h3>${plan.name}</h3>
+            <div class="price">${plan.price}</div>
+            <div class="price-period">Per Project</div>
+            <ul class="pricing-features">
+                ${plan.features.map(f => `<li><i class="fas fa-check"></i> ${f}</li>`).join('')}
+            </ul>
+            <a href="#" class="btn btn-outline" onclick="navigateTo('contact')">Get Started</a>
+        </div>
+    `).join('');
+}
+
+// Override form submission
+document.getElementById('pricingForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const plan = {
+        id: editingPricingId || Date.now(),
+        name: document.getElementById('pricingName').value,
+        price: document.getElementById('pricingPrice').value,
+        features: document.getElementById('pricingFeatures').value.split('\n').filter(f => f.trim()),
+        popular: document.getElementById('pricingPopular').value === 'true'
+    };
+    
+    let plans = JSON.parse(localStorage.getItem('absta_pricing') || '[]');
+    
+    if (editingPricingId) {
+        plans = plans.map(p => p.id == editingPricingId ? plan : p);
+    } else {
+        plans.push(plan);
+    }
+    
+    localStorage.setItem('absta_pricing', JSON.stringify(plans));
+    
+    if (isFirebaseInitialized) {
+        const plansObj = {};
+        plans.forEach((p, index) => {
+            plansObj[p.id] = p;
+        });
+        syncToFirebase('pricing', plansObj);
+    }
+    
+    loadPricingPlans();
+    closeModal('pricingModal');
+    alert(`Pricing plan ${editingPricingId ? 'updated' : 'added'} successfully!`);
+});
         });
     </script>
 </body>
