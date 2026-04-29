@@ -2861,8 +2861,23 @@ document.addEventListener('DOMContentLoaded', function() {
                         
                         // Load data from Firebase
                         loadFromFirebase();
-                    }
-                });
+                    
+                    // 🔥 ONGEZA MISTARI HII 3 HAPA CHINI 🔥
+                // Pakia logo mara moja baada ya kuconnect
+                setTimeout(function() {
+                    loadLogoFromFirebase();
+                }, 500);
+            }
+        });
+        
+        return true;
+    } catch (error) {
+        console.error("Firebase initialization error:", error);
+        showSyncStatus('error', 'Sync unavailable');
+        return false;
+    }
+}
+                
                 
                 return true;
             } catch (error) {
@@ -3998,6 +4013,9 @@ document.addEventListener('DOMContentLoaded', function() {
             if (companyPhone) companyPhone.value = settings.companyPhone || '';
             if (companyAddress) companyAddress.value = settings.companyAddress || '';
             if (companyAbout) companyAbout.value = settings.companyAbout || '';
+
+            setupLogoUploadInAdmin();
+            loadLogoFromFirebase()
         }
 
         document.getElementById('settingsForm').addEventListener('submit', function(e) {
@@ -4435,41 +4453,61 @@ function initLogoSystem() {
 
 // Call this when admin settings section is shown
 function setupLogoUploadInAdmin() {
-    const uploadArea = document.querySelector('.logo-upload-area');
-    if (!uploadArea) return;
-    
-    // Ensure the file input exists
-    let fileInput = document.getElementById('logoFileInput');
-    if (!fileInput) {
-        fileInput = document.createElement('input');
-        fileInput.type = 'file';
-        fileInput.id = 'logoFileInput';
-        fileInput.accept = 'image/*';
-        fileInput.style.display = 'none';
-        fileInput.onchange = function(e) {
-            uploadLogoToFirebase(e.target);
+    // Subiri DOM iwe tayari
+    setTimeout(() => {
+        const uploadArea = document.querySelector('.logo-upload-area');
+        if (!uploadArea) {
+            console.log("Logo upload area not found yet");
+            return;
+        }
+        
+        // Hakikisha file input ipo
+        let fileInput = document.getElementById('logoFileInput');
+        if (!fileInput) {
+            fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.id = 'logoFileInput';
+            fileInput.accept = 'image/*';
+            fileInput.style.display = 'none';
+            fileInput.onchange = function(e) {
+                if (e.target.files && e.target.files[0]) {
+                    uploadLogoToFirebase(e.target);
+                }
+            };
+            uploadArea.parentNode.appendChild(fileInput);
+        }
+        
+        // Bonyeza eneo la kupakia logo
+        uploadArea.onclick = function() {
+            document.getElementById('logoFileInput').click();
         };
-        uploadArea.parentNode.appendChild(fileInput);
-    }
-    
-    // Update click handler
-    uploadArea.onclick = function() {
-        document.getElementById('logoFileInput').click();
-    };
-    
-    // Add delete button if not exists
-    if (!document.getElementById('deleteLogoBtn')) {
-        const deleteBtn = document.createElement('button');
-        deleteBtn.id = 'deleteLogoBtn';
-        deleteBtn.type = 'button';
-        deleteBtn.className = 'btn btn-danger';
-        deleteBtn.style.marginTop = '10px';
-        deleteBtn.style.width = '100%';
-        deleteBtn.innerHTML = '<i class="fas fa-trash"></i> Delete Logo from Firebase';
-        deleteBtn.onclick = deleteLogoFromFirebase;
-        uploadArea.parentNode.appendChild(deleteBtn);
-    }
-    
+        
+        // Ongeza kitufe cha kufuta logo
+        if (!document.getElementById('deleteLogoBtn')) {
+            const deleteBtn = document.createElement('button');
+            deleteBtn.id = 'deleteLogoBtn';
+            deleteBtn.type = 'button';
+            deleteBtn.className = 'btn btn-danger';
+            deleteBtn.style.marginTop = '15px';
+            deleteBtn.style.width = '100%';
+            deleteBtn.innerHTML = '<i class="fas fa-trash"></i> Futa Logo Kutoka Firebase';
+            deleteBtn.onclick = deleteLogoFromFirebase;
+            uploadArea.parentNode.appendChild(deleteBtn);
+        }
+        
+        // Ongeza alama ya hali ya logo
+        if (!document.getElementById('firebaseLogoStatus')) {
+            const statusSpan = document.createElement('div');
+            statusSpan.id = 'firebaseLogoStatus';
+            statusSpan.style.marginTop = '10px';
+            statusSpan.style.fontSize = '0.85rem';
+            statusSpan.style.textAlign = 'center';
+            uploadArea.parentNode.appendChild(statusSpan);
+        }
+        
+        console.log("✅ Logo upload system imeanza kufanya kazi");
+    }, 100);
+}
     // Load current logo
     loadLogoFromFirebase();
     checkFirebaseLogoStatus();
