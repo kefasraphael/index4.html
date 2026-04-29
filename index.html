@@ -2324,20 +2324,28 @@
                     <div id="settings-section" class="admin-section">
     <h3 style="color: white; margin-bottom: 30px;">Website Settings</h3>
     
-    <!-- SEHEMU MPYA YA LOGO UPLOAD -->
+   <div id="settings-section" class="admin-section">
+    <h3 style="color: white; margin-bottom: 30px;">Website Settings</h3>
+    
+    <!-- SEHEMU YA LOGO UPLOAD -->
     <div style="margin-bottom: 40px; padding: 20px; background: var(--glass-bg); border-radius: 15px;">
         <h4 style="color: white; margin-bottom: 15px;">🏷️ Website Logo</h4>
-        <div class="logo-upload-area" onclick="document.getElementById('logoFileInput').click()">
+        <div class="logo-upload-area" style="cursor: pointer;">
             <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; margin-bottom: 10px; color: var(--absta-primary);"></i>
-            <p>Change logo</p>
+            <p>Bonyeza hapa kupakia logo</p>
             <p style="font-size: 0.8rem; color: var(--absta-gray);">PNG, JPG (Max 2MB)</p>
         </div>
-        <input type="file" id="logoFileInput" style="display: none;" accept="image/*" onchange="uploadLogoImage(this)">
-        <div class="logo-preview" id="logoPreviewDiv">
-            <img src="" alt="Logo Preview" id="logoPreviewImg">
+        <div class="logo-preview" style="margin-top: 20px; text-align: center;">
+            <img id="logoPreviewImg" src="" alt="Logo Preview" style="width: 80px; height: 80px; border-radius: 15px; object-fit: cover; border: 2px solid var(--glass-border);">
         </div>
-        <div class="current-logo" id="currentLogoStatus"></div>
+        <div class="current-logo" id="currentLogoStatus" style="margin-top: 10px; text-align: center; font-size: 0.85rem;"></div>
     </div>
+    
+    <!-- REST OF SETTINGS FORM -->
+    <form id="settingsForm">
+        <!-- ... form inputs zako ... -->
+    </form>
+</div>
     
     <!-- FORM YA SETTINGS ZILIZOPO -->
     <form id="settingsForm">
