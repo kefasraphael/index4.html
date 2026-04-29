@@ -2661,10 +2661,10 @@
     let editingProjectId = null;
     let editingTeamId = null;
     let viewingMessageId = null;
-    let isFirebaseInitialized = false;
     let database = null;
-    let isDataLoaded = false; // Prevent multiple loads
-    
+    let isFirebaseInitialized = false;
+    let isDataLoaded = false;
+
     // ===== FIREBASE CONFIGURATION =====
     const firebaseConfig = {
         apiKey: "AIzaSyAoBDaxlmdHZNibOPo39lUk-LzNl3VFMnY",
@@ -2675,8 +2675,8 @@
         messagingSenderId: "1057402336705",
         appId: "1:1057402336705:web:257880680e9eba1582eb40"
     };
-    
-    // ===== FIREBASE INITIALIZATION (ONCE ONLY) =====
+
+    // ===== INITIALIZE FIREBASE ONCE =====
     function initFirebase() {
         if (isFirebaseInitialized) return true;
         
@@ -2686,40 +2686,35 @@
                 return false;
             }
             
-            // Check if already initialized
             if (firebase.apps.length === 0) {
                 firebase.initializeApp(firebaseConfig);
             }
             
             database = firebase.database();
             isFirebaseInitialized = true;
-            console.log("✅ Firebase initialized once");
+            console.log("✅ Firebase initialized");
             
-            // Setup listeners after initialization
+            // Setup listeners
             setupFirebaseListeners();
+            
+            // Load initial data
+            loadAllDataFromFirebase();
+            
             return true;
         } catch (error) {
             console.error("Firebase init error:", error);
             return false;
         }
     }
-    
-    // ===== FIREBASE LISTENERS (ONLY ONCE) =====
+
+    // ===== FIREBASE LISTENERS =====
     let listenersSetup = false;
-    
+
     function setupFirebaseListeners() {
         if (listenersSetup || !database) return;
         listenersSetup = true;
         
-        // Test connection only once
-        database.ref('.info/connected').once('value', (snap) => {
-            if (snap.val() === true) {
-                console.log("Firebase connected");
-                loadAllDataFromFirebase();
-            }
-        });
-        
-        // Listen for changes
+        // Projects listener
         database.ref('projects').on('value', (snapshot) => {
             const projects = snapshot.val();
             if (projects) {
@@ -2728,6 +2723,7 @@
             }
         });
         
+        // Team listener
         database.ref('team').on('value', (snapshot) => {
             const team = snapshot.val();
             if (team) {
@@ -2736,6 +2732,7 @@
             }
         });
         
+        // Settings listener
         database.ref('settings').on('value', (snapshot) => {
             const settings = snapshot.val();
             if (settings) {
@@ -2743,17 +2740,29 @@
                 refreshCurrentPage();
             }
         });
+        
+        // Messages listener
+        database.ref('messages').on('value', (snapshot) => {
+            const messages = snapshot.val();
+            if (messages) {
+                localStorage.setItem('absta_messages', JSON.stringify(Object.values(messages)));
+                if (document.getElementById('messages-section')?.classList.contains('active')) {
+                    loadAdminMessages();
+                }
+            }
+        });
     }
-    
-    // ===== LOAD ALL DATA FROM FIREBASE ONCE =====
+
+    // ===== LOAD ALL DATA FROM FIREBASE =====
     function loadAllDataFromFirebase() {
         if (!database) return;
         
         Promise.all([
             database.ref('projects').once('value'),
             database.ref('team').once('value'),
-            database.ref('settings').once('value')
-        ]).then(([projectsSnap, teamSnap, settingsSnap]) => {
+            database.ref('settings').once('value'),
+            database.ref('messages').once('value')
+        ]).then(([projectsSnap, teamSnap, settingsSnap, messagesSnap]) => {
             if (projectsSnap.exists()) {
                 localStorage.setItem('absta_projects', JSON.stringify(Object.values(projectsSnap.val())));
             }
@@ -2763,42 +2772,24 @@
             if (settingsSnap.exists()) {
                 localStorage.setItem('absta_settings', JSON.stringify(settingsSnap.val()));
             }
+            if (messagesSnap.exists()) {
+                localStorage.setItem('absta_messages', JSON.stringify(Object.values(messagesSnap.val())));
+            }
             
-            // Load logo separately
+            // Load logo
             loadLogoFromFirebase();
             
             // Refresh current page
             refreshCurrentPage();
+            
+            showSyncStatus('success', 'Data loaded');
         }).catch(error => {
             console.error("Error loading from Firebase:", error);
             refreshCurrentPage();
+            showSyncStatus('error', 'Using local data');
         });
     }
-    
-    // ===== REFRESH CURRENT PAGE ONLY =====
-    function refreshCurrentPage() {
-        const activePage = document.querySelector('.page.active')?.id;
-        
-        switch(activePage) {
-            case 'home-page':
-                loadHomePage();
-                break;
-            case 'portfolio-page':
-                loadPortfolioPage();
-                break;
-            case 'about-page':
-                loadAboutPage();
-                break;
-            case 'admin-page':
-                if (currentUser) loadAdminDashboard();
-                break;
-        }
-        
-        // Always update footer and stats
-        loadFooterData();
-        updateStats();
-    }
-    
+
     // ===== SYNC TO FIREBASE =====
     function syncToFirebase(type, data) {
         if (!database) return;
@@ -2810,499 +2801,46 @@
             .then(() => console.log(`${type} synced`))
             .catch(error => console.error(`Error syncing ${type}:`, error));
     }
-    
-    // ===== INITIALIZATION (ONCE) =====
-    let isInitialized = false;
-    
-    document.addEventListener('DOMContentLoaded', function() {
-        if (isInitialized) return;
-        isInitialized = true;
+
+    // ===== SYNC STATUS UI =====
+    function showSyncStatus(type, message) {
+        const syncStatus = document.getElementById('syncStatus');
+        if (!syncStatus) return;
         
-        // Remove loader
-        setTimeout(() => {
-            const loader = document.getElementById('loader');
-            if (loader) {
-                loader.style.opacity = '0';
-                setTimeout(() => {
-                    loader.style.display = 'none';
-                }, 500);
-            }
-        }, 800);
+        const icon = syncStatus.querySelector('i');
+        const span = syncStatus.querySelector('span');
         
-        // Initialize navigation
-        initNavigation();
+        syncStatus.classList.add('active');
         
-        // Initialize default data
-        initData();
-        
-        // Initialize Firebase (once)
-        initFirebase();
-        
-        // Load home page
-        loadHomePage();
-        
-        // Update year
-        updateCurrentYear();
-        
-        // Check login status
-        checkLoginStatus();
-        
-        // Initialize lightbox
-        initLightbox();
-    });
-    
-    // ===== NAVIGATION =====
-    function initNavigation() {
-        const mobileToggle = document.getElementById('mobileToggle');
-        const navLinks = document.getElementById('navLinks');
-        
-        if (mobileToggle) {
-            mobileToggle.removeEventListener('click', mobileToggle._listener);
-            mobileToggle._listener = function() {
-                navLinks.classList.toggle('active');
-            };
-            mobileToggle.addEventListener('click', mobileToggle._listener);
+        if (type === 'syncing') {
+            icon.className = 'fas fa-sync-alt fa-spin';
+            span.textContent = message || 'Syncing...';
+        } else if (type === 'success') {
+            icon.className = 'fas fa-check-circle';
+            span.textContent = message || 'Synced';
+            setTimeout(() => syncStatus.classList.remove('active'), 2000);
+        } else if (type === 'error') {
+            icon.className = 'fas fa-exclamation-circle';
+            span.textContent = message || 'Sync failed';
         }
     }
-    
-    // ===== LOGO MANAGEMENT =====
-    function loadLogoFromFirebase() {
-        if (!database) {
-            setDefaultLogo();
-            return;
+
+    // ===== REFRESH CURRENT PAGE =====
+    function refreshCurrentPage() {
+        const activePage = document.querySelector('.page.active')?.id;
+        
+        switch(activePage) {
+            case 'home-page': loadHomePage(); break;
+            case 'portfolio-page': loadPortfolioPage(); break;
+            case 'about-page': loadAboutPage(); break;
+            case 'admin-page': if (currentUser) loadAdminDashboard(); break;
         }
         
-        database.ref('settings/websiteLogo').once('value')
-            .then((snapshot) => {
-                const logoData = snapshot.val();
-                if (logoData && logoData !== '') {
-                    updateAllLogos(logoData);
-                } else {
-                    setDefaultLogo();
-                }
-            })
-            .catch(() => setDefaultLogo());
-    }
-    
-    function setDefaultLogo() {
-        const defaultLogo = "https://via.placeholder.com/50x50?text=ABSTA";
-        updateAllLogos(defaultLogo);
-    }
-    
-    function updateAllLogos(imageData) {
-        const mainLogo = document.getElementById('mainLogo');
-        const footerLogo = document.getElementById('footerLogoImg');
-        const previewImg = document.getElementById('logoPreviewImg');
-        
-        if (mainLogo) mainLogo.src = imageData;
-        if (footerLogo) footerLogo.src = imageData;
-        if (previewImg) previewImg.src = imageData;
-    }
-    
-    function uploadLogoToFirebase(input) {
-        const file = input.files[0];
-        if (!file) return;
-        
-        if (file.size > 2 * 1024 * 1024) {
-            alert('File too large! Max 2MB');
-            return;
-        }
-        
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            if (database) {
-                database.ref('settings/websiteLogo').set(e.target.result)
-                    .then(() => {
-                        updateAllLogos(e.target.result);
-                        alert('Logo saved successfully!');
-                    })
-                    .catch(error => alert('Error saving logo: ' + error.message));
-            }
-        };
-        reader.readAsDataURL(file);
-    }
-    
-    // ===== HOME PAGE =====
-    window.loadHomePage = function() {
-        loadFeaturedProjects();
-        updateStats();
         loadFooterData();
-        setTimeout(refreshImageListeners, 100);
-    };
-    
-    function loadFeaturedProjects() {
-        const projectsGrid = document.getElementById('featuredProjects');
-        if (!projectsGrid) return;
-        
-        const projects = JSON.parse(localStorage.getItem('absta_projects') || '[]');
-        const featured = projects.slice(0, 3);
-        
-        if (featured.length === 0) {
-            projectsGrid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--absta-gray);">
-                <i class="fas fa-video-slash" style="font-size:3rem;margin-bottom:20px;"></i>
-                <h3>No Projects Yet</h3>
-                <p>Check back soon for our latest work</p>
-            </div>`;
-            return;
-        }
-        
-        projectsGrid.innerHTML = featured.map(project => `
-            <div class="portfolio-item" data-category="${project.category}">
-                <div class="portfolio-image">
-                    <img src="${project.image}" alt="${project.title}" loading="lazy">
-                </div>
-                <div class="portfolio-content">
-                    <span class="portfolio-category">${project.category}</span>
-                    <h3 class="portfolio-title">${project.title}</h3>
-                    <p class="portfolio-description">${project.description}</p>
-                    <div class="portfolio-meta">
-                        <div class="portfolio-date">
-                            <i class="far fa-calendar"></i>
-                            <span>${new Date(project.date).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `).join('');
+        updateStats();
     }
-    
-    function updateStats() {
-        const projects = JSON.parse(localStorage.getItem('absta_projects') || '[]');
-        const projectsCount = document.getElementById('projectsCount');
-        if (projectsCount) projectsCount.textContent = projects.length;
-    }
-    
-    // ===== PORTFOLIO PAGE =====
-    window.loadPortfolioPage = function() {
-        loadAllProjects();
-        initPortfolioTabs();
-        setTimeout(refreshImageListeners, 100);
-    };
-    
-    function loadAllProjects() {
-        const portfolioGrid = document.getElementById('portfolioGrid');
-        if (!portfolioGrid) return;
-        
-        const projects = JSON.parse(localStorage.getItem('absta_projects') || '[]');
-        
-        if (projects.length === 0) {
-            portfolioGrid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--absta-gray);">
-                <i class="fas fa-video-slash" style="font-size:3rem;margin-bottom:20px;"></i>
-                <h3>No Projects Yet</h3>
-                <p>Our portfolio is being updated with amazing projects</p>
-            </div>`;
-            return;
-        }
-        
-        portfolioGrid.innerHTML = projects.map(project => `
-            <div class="portfolio-item" data-category="${project.category}">
-                <div class="portfolio-image">
-                    <img src="${project.image}" alt="${project.title}" loading="lazy">
-                </div>
-                <div class="portfolio-content">
-                    <span class="portfolio-category">${project.category}</span>
-                    <h3 class="portfolio-title">${project.title}</h3>
-                    <p class="portfolio-description">${project.description}</p>
-                    <div class="portfolio-meta">
-                        <div class="portfolio-date">
-                            <i class="far fa-calendar"></i>
-                            <span>${new Date(project.date).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `).join('');
-    }
-    
-    function initPortfolioTabs() {
-        const tabs = document.querySelectorAll('#portfolioTabs .admin-tab');
-        tabs.forEach(tab => {
-            tab.removeEventListener('click', tab._listener);
-            tab._listener = function() {
-                tabs.forEach(t => t.classList.remove('active'));
-                this.classList.add('active');
-                const filter = this.getAttribute('data-filter');
-                filterPortfolioProjects(filter);
-            };
-            tab.addEventListener('click', tab._listener);
-        });
-    }
-    
-    function filterPortfolioProjects(filter) {
-        const projects = document.querySelectorAll('#portfolioGrid .portfolio-item');
-        projects.forEach(project => {
-            if (filter === 'all' || project.getAttribute('data-category') === filter) {
-                project.style.display = 'block';
-            } else {
-                project.style.display = 'none';
-            }
-        });
-    }
-    
-    // ===== ABOUT PAGE =====
-    window.loadAboutPage = function() {
-        loadTeamMembers();
-        setTimeout(refreshImageListeners, 100);
-    };
-    
-    function loadTeamMembers() {
-        const teamGrid = document.getElementById('teamGrid');
-        if (!teamGrid) return;
-        
-        const team = JSON.parse(localStorage.getItem('absta_team') || '[]');
-        
-        if (team.length === 0) {
-            teamGrid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--absta-gray);">
-                <i class="fas fa-users" style="font-size:3rem;margin-bottom:20px;"></i>
-                <h3>Team Information Coming Soon</h3>
-            </div>`;
-            return;
-        }
-        
-        teamGrid.innerHTML = team.map(member => `
-            <div class="team-card">
-                <div class="team-image">
-                    <img src="${member.image}" alt="${member.name}" loading="lazy">
-                </div>
-                <div class="team-info">
-                    <h3>${member.name}</h3>
-                    <div class="team-role">${member.role}</div>
-                    <p class="team-bio">${member.bio}</p>
-                    <div class="social-links">
-                        <a href="mailto:${member.email}" title="Email">
-                            <i class="fas fa-envelope"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-        `).join('');
-    }
-    
-    // ===== CONTACT PAGE =====
-    window.loadContactPage = function() {
-        loadContactInfo();
-        initContactForm();
-    };
-    
-    function loadContactInfo() {
-        const settings = JSON.parse(localStorage.getItem('absta_settings') || '{}');
-        
-        if (settings.companyAddress) {
-            const contactAddress = document.getElementById('contactAddress');
-            const footerAddress = document.getElementById('footerAddress');
-            if (contactAddress) contactAddress.textContent = settings.companyAddress;
-            if (footerAddress) footerAddress.textContent = settings.companyAddress;
-        }
-        
-        if (settings.companyPhone) {
-            const contactPhone = document.getElementById('contactPhone');
-            const footerPhone = document.getElementById('footerPhone');
-            if (contactPhone) contactPhone.textContent = settings.companyPhone;
-            if (footerPhone) footerPhone.textContent = settings.companyPhone;
-        }
-        
-        if (settings.companyEmail) {
-            const contactEmail = document.getElementById('contactEmail');
-            const footerEmail = document.getElementById('footerEmail');
-            if (contactEmail) contactEmail.textContent = settings.companyEmail;
-            if (footerEmail) footerEmail.textContent = settings.companyEmail;
-        }
-    }
-    
-    function initContactForm() {
-        const contactForm = document.getElementById('contactForm');
-        if (contactForm) {
-            contactForm.removeEventListener('submit', contactForm._listener);
-            contactForm._listener = function(e) {
-                e.preventDefault();
-                
-                const message = {
-                    id: Date.now(),
-                    name: document.getElementById('name').value,
-                    email: document.getElementById('email').value,
-                    subject: document.getElementById('subject').value,
-                    message: document.getElementById('message').value,
-                    date: new Date().toISOString(),
-                    read: false
-                };
-                
-                const messages = JSON.parse(localStorage.getItem('absta_messages') || '[]');
-                messages.unshift(message);
-                localStorage.setItem('absta_messages', JSON.stringify(messages));
-                
-                if (database) {
-                    const messagesObj = {};
-                    messages.forEach(msg => { messagesObj[msg.id] = msg; });
-                    syncToFirebase('messages', messagesObj);
-                }
-                
-                alert('Thank you for your message! We will get back to you soon.');
-                contactForm.reset();
-            };
-            contactForm.addEventListener('submit', contactForm._listener);
-        }
-    }
-    
-    // ===== LIGHTBOX SYSTEM =====
-    let currentImageIndex = 0;
-    let currentImageArray = [];
-    
-    function initLightbox() {
-        const modal = document.getElementById('imageModal');
-        const modalImg = document.getElementById('modalImage');
-        const captionText = document.getElementById('modalCaption');
-        const closeBtn = document.querySelector('.image-modal-close');
-        const prevBtn = document.getElementById('prevImageBtn');
-        const nextBtn = document.getElementById('nextImageBtn');
-        
-        if (!modal) return;
-        
-        if (closeBtn) {
-            closeBtn.removeEventListener('click', closeBtn._listener);
-            closeBtn._listener = () => modal.style.display = 'none';
-            closeBtn.addEventListener('click', closeBtn._listener);
-        }
-        
-        if (prevBtn) {
-            prevBtn.removeEventListener('click', prevBtn._listener);
-            prevBtn._listener = () => {
-                if (currentImageArray.length > 0) {
-                    currentImageIndex = (currentImageIndex - 1 + currentImageArray.length) % currentImageArray.length;
-                    modalImg.src = currentImageArray[currentImageIndex].src;
-                    captionText.innerHTML = currentImageArray[currentImageIndex].caption;
-                }
-            };
-            prevBtn.addEventListener('click', prevBtn._listener);
-        }
-        
-        if (nextBtn) {
-            nextBtn.removeEventListener('click', nextBtn._listener);
-            nextBtn._listener = () => {
-                if (currentImageArray.length > 0) {
-                    currentImageIndex = (currentImageIndex + 1) % currentImageArray.length;
-                    modalImg.src = currentImageArray[currentImageIndex].src;
-                    captionText.innerHTML = currentImageArray[currentImageIndex].caption;
-                }
-            };
-            nextBtn.addEventListener('click', nextBtn._listener);
-        }
-        
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) modal.style.display = 'none';
-        });
-        
-        document.addEventListener('keydown', (e) => {
-            if (modal.style.display === 'block') {
-                if (e.key === 'Escape') modal.style.display = 'none';
-                else if (e.key === 'ArrowLeft' && prevBtn) prevBtn.click();
-                else if (e.key === 'ArrowRight' && nextBtn) nextBtn.click();
-            }
-        });
-    }
-    
-    function openLightbox(element) {
-        const modal = document.getElementById('imageModal');
-        const modalImg = document.getElementById('modalImage');
-        const captionText = document.getElementById('modalCaption');
-        
-        const allImages = [];
-        
-        if (element.closest('.portfolio-grid')) {
-            document.querySelectorAll('.portfolio-image img').forEach((img, index) => {
-                allImages.push({ src: img.src, caption: img.alt || 'Portfolio Image' });
-                if (img === element) currentImageIndex = index;
-            });
-        } else if (element.closest('.team-grid')) {
-            document.querySelectorAll('.team-image img').forEach((img, index) => {
-                allImages.push({ src: img.src, caption: img.alt || 'Team Member' });
-                if (img === element) currentImageIndex = index;
-            });
-        } else {
-            allImages.push({ src: element.src, caption: element.alt || 'Image' });
-            currentImageIndex = 0;
-        }
-        
-        currentImageArray = allImages;
-        modal.style.display = 'block';
-        modalImg.src = element.src;
-        captionText.innerHTML = element.alt || 'Image';
-    }
-    
-    function refreshImageListeners() {
-        document.querySelectorAll('.portfolio-image img, .team-image img').forEach(img => {
-            img.removeEventListener('click', img._listener);
-            img._listener = function(e) {
-                e.stopPropagation();
-                openLightbox(this);
-            };
-            img.addEventListener('click', img._listener);
-        });
-    }
-    
-    // ===== ADMIN FUNCTIONS (Keep your existing ones) =====
-    // ... (admin functions remain the same, just make sure they don't cause loops)
-    
-    // ===== FOOTER & UTILITIES =====
-    function loadFooterData() {
-        const settings = JSON.parse(localStorage.getItem('absta_settings') || '{}');
-        const socialLinks = document.getElementById('socialLinks');
-        
-        if (settings.social && socialLinks) {
-            let socialHTML = '';
-            const socials = [
-                { platform: 'instagram', icon: 'fab fa-instagram' },
-                { platform: 'facebook', icon: 'fab fa-facebook' },
-                { platform: 'twitter', icon: 'fab fa-twitter' },
-                { platform: 'youtube', icon: 'fab fa-youtube' }
-            ];
-            
-            socials.forEach(social => {
-                if (settings.social[social.platform]) {
-                    socialHTML += `<a href="${settings.social[social.platform]}" target="_blank" title="${social.platform}"><i class="${social.icon}"></i></a>`;
-                }
-            });
-            
-            socialLinks.innerHTML = socialHTML;
-        }
-    }
-    
-    function updateCurrentYear() {
-        const currentYear = document.getElementById('currentYear');
-        if (currentYear) currentYear.textContent = new Date().getFullYear();
-    }
-    
-    function navigateTo(page) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
-        
-        const pageElement = document.getElementById(`${page}-page`);
-        if (pageElement) pageElement.classList.add('active');
-        
-        const navLink = document.querySelector(`.nav-link[onclick*="${page}"]`);
-        if (navLink) navLink.classList.add('active');
-        
-        switch(page) {
-            case 'home': loadHomePage(); break;
-            case 'portfolio': loadPortfolioPage(); break;
-            case 'about': loadAboutPage(); break;
-            case 'contact': loadContactPage(); break;
-            case 'admin': checkAdminAccess(); break;
-        }
-        
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-    
-    function checkLoginStatus() {
-        const loggedInUser = localStorage.getItem('absta_logged_in');
-        if (loggedInUser) currentUser = JSON.parse(loggedInUser);
-    }
-    
-    function checkAdminAccess() {
-        if (!currentUser) navigateTo('login');
-        else loadAdminDashboard();
-    }
-    
-    // ===== DATA INITIALIZATION =====
+
+    // ===== INITIAL DATA =====
     function initData() {
         if (!localStorage.getItem('absta_projects')) {
             localStorage.setItem('absta_projects', JSON.stringify([
@@ -3330,7 +2868,7 @@
                 companyPhone: '+255 784 123 456',
                 companyAddress: 'Dar es Salaam, Tanzania',
                 companyAbout: 'We create visual stories that captivate and inspire.',
-                social: { instagram: 'https://instagram.com/abstacreatives', facebook: 'https://facebook.com/abstacreatives', twitter: 'https://twitter.com/abstacreatives', youtube: 'https://youtube.com/abstacreatives' }
+                social: { instagram: '#', facebook: '#', twitter: '#', youtube: '#' }
             }));
         }
         
@@ -3338,16 +2876,440 @@
             localStorage.setItem('absta_admin', JSON.stringify({ username: 'admin', password: 'password123' }));
         }
     }
+
+    // ===== LOGO MANAGEMENT =====
+    function loadLogoFromFirebase() {
+        const mainLogo = document.getElementById('mainLogo');
+        const footerLogo = document.getElementById('footerLogoImg');
+        const previewImg = document.getElementById('logoPreviewImg');
+        
+        if (!database) {
+            setDefaultLogo();
+            return;
+        }
+        
+        database.ref('settings/websiteLogo').once('value')
+            .then((snapshot) => {
+                const logoData = snapshot.val();
+                if (logoData && logoData !== '') {
+                    if (mainLogo) mainLogo.src = logoData;
+                    if (footerLogo) footerLogo.src = logoData;
+                    if (previewImg) previewImg.src = logoData;
+                } else {
+                    setDefaultLogo();
+                }
+            })
+            .catch(() => setDefaultLogo());
+    }
     
-    // Load admin dashboard (simplified - add your existing admin functions here)
-    window.loadAdminDashboard = function() {
-        updateAdminStats();
-        loadAdminProjects();
-        loadAdminTeam();
-        loadAdminMessages();
-        loadAdminSettings();
-    };
+    function setDefaultLogo() {
+        const defaultLogo = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='50' height='50' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23FF3366'/%3E%3Ctext x='50' y='67' text-anchor='middle' fill='white' font-size='40' font-weight='bold'%3EA%3C/text%3E%3C/svg%3E";
+        const mainLogo = document.getElementById('mainLogo');
+        const footerLogo = document.getElementById('footerLogoImg');
+        const previewImg = document.getElementById('logoPreviewImg');
+        
+        if (mainLogo) mainLogo.src = defaultLogo;
+        if (footerLogo) footerLogo.src = defaultLogo;
+        if (previewImg) previewImg.src = defaultLogo;
+    }
+
+    function uploadLogoToFirebase(input) {
+        const file = input.files[0];
+        if (!file) return;
+        
+        if (file.size > 2 * 1024 * 1024) {
+            alert('File too large! Max 2MB');
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            if (database) {
+                database.ref('settings/websiteLogo').set(e.target.result)
+                    .then(() => {
+                        updateAllLogos(e.target.result);
+                        alert('Logo saved successfully!');
+                        showSyncStatus('success', 'Logo uploaded');
+                    })
+                    .catch(err => alert('Error: ' + err.message));
+            }
+        };
+        reader.readAsDataURL(file);
+    }
     
+    function updateAllLogos(imageData) {
+        const mainLogo = document.getElementById('mainLogo');
+        const footerLogo = document.getElementById('footerLogoImg');
+        const previewImg = document.getElementById('logoPreviewImg');
+        
+        if (mainLogo) mainLogo.src = imageData;
+        if (footerLogo) footerLogo.src = imageData;
+        if (previewImg) previewImg.src = imageData;
+    }
+
+    // ===== NAVIGATION =====
+    function initNavigation() {
+        const mobileToggle = document.getElementById('mobileToggle');
+        const navLinks = document.getElementById('navLinks');
+        
+        if (mobileToggle) {
+            mobileToggle.onclick = () => navLinks.classList.toggle('active');
+        }
+    }
+
+    function navigateTo(page) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+        
+        const pageElement = document.getElementById(`${page}-page`);
+        if (pageElement) pageElement.classList.add('active');
+        
+        const navLink = document.querySelector(`.nav-link[onclick*="${page}"]`);
+        if (navLink) navLink.classList.add('active');
+        
+        switch(page) {
+            case 'home': loadHomePage(); break;
+            case 'portfolio': loadPortfolioPage(); break;
+            case 'about': loadAboutPage(); break;
+            case 'contact': loadContactPage(); break;
+            case 'admin': checkAdminAccess(); break;
+            case 'login': break;
+        }
+        
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // ===== HOME PAGE =====
+    function loadHomePage() {
+        loadFeaturedProjects();
+        updateStats();
+        loadFooterData();
+        setTimeout(addImageClickListeners, 100);
+    }
+
+    function loadFeaturedProjects() {
+        const projectsGrid = document.getElementById('featuredProjects');
+        if (!projectsGrid) return;
+        
+        const projects = JSON.parse(localStorage.getItem('absta_projects') || '[]');
+        const featured = projects.slice(0, 3);
+        
+        if (featured.length === 0) {
+            projectsGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px;color:#8E8E93;"><i class="fas fa-video-slash" style="font-size:3rem;margin-bottom:20px;"></i><h3>No Projects Yet</h3></div>';
+            return;
+        }
+        
+        projectsGrid.innerHTML = featured.map(project => `
+            <div class="portfolio-item" data-category="${project.category}">
+                <div class="portfolio-image">
+                    <img src="${project.image}" alt="${project.title}" loading="lazy">
+                </div>
+                <div class="portfolio-content">
+                    <span class="portfolio-category">${project.category}</span>
+                    <h3 class="portfolio-title">${project.title}</h3>
+                    <p class="portfolio-description">${project.description}</p>
+                    <div class="portfolio-meta">
+                        <div class="portfolio-date">
+                            <i class="far fa-calendar"></i>
+                            <span>${new Date(project.date).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function updateStats() {
+        const projects = JSON.parse(localStorage.getItem('absta_projects') || '[]');
+        const projectsCount = document.getElementById('projectsCount');
+        if (projectsCount) projectsCount.textContent = projects.length;
+    }
+
+    // ===== PORTFOLIO PAGE =====
+    function loadPortfolioPage() {
+        loadAllProjects();
+        initPortfolioTabs();
+        setTimeout(addImageClickListeners, 100);
+    }
+
+    function loadAllProjects() {
+        const portfolioGrid = document.getElementById('portfolioGrid');
+        if (!portfolioGrid) return;
+        
+        const projects = JSON.parse(localStorage.getItem('absta_projects') || '[]');
+        
+        if (projects.length === 0) {
+            portfolioGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px;color:#8E8E93;"><i class="fas fa-video-slash" style="font-size:3rem;margin-bottom:20px;"></i><h3>No Projects Yet</h3></div>';
+            return;
+        }
+        
+        portfolioGrid.innerHTML = projects.map(project => `
+            <div class="portfolio-item" data-category="${project.category}">
+                <div class="portfolio-image">
+                    <img src="${project.image}" alt="${project.title}" loading="lazy">
+                </div>
+                <div class="portfolio-content">
+                    <span class="portfolio-category">${project.category}</span>
+                    <h3 class="portfolio-title">${project.title}</h3>
+                    <p class="portfolio-description">${project.description}</p>
+                    <div class="portfolio-meta">
+                        <div class="portfolio-date">
+                            <i class="far fa-calendar"></i>
+                            <span>${new Date(project.date).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function initPortfolioTabs() {
+        const tabs = document.querySelectorAll('#portfolioTabs .admin-tab');
+        tabs.forEach(tab => {
+            tab.onclick = function() {
+                tabs.forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                const filter = this.getAttribute('data-filter');
+                filterPortfolioProjects(filter);
+            };
+        });
+    }
+
+    function filterPortfolioProjects(filter) {
+        const projects = document.querySelectorAll('#portfolioGrid .portfolio-item');
+        projects.forEach(project => {
+            if (filter === 'all' || project.getAttribute('data-category') === filter) {
+                project.style.display = 'block';
+            } else {
+                project.style.display = 'none';
+            }
+        });
+    }
+
+    // ===== ABOUT PAGE =====
+    function loadAboutPage() {
+        loadTeamMembers();
+        setTimeout(addImageClickListeners, 100);
+    }
+
+    function loadTeamMembers() {
+        const teamGrid = document.getElementById('teamGrid');
+        if (!teamGrid) return;
+        
+        const team = JSON.parse(localStorage.getItem('absta_team') || '[]');
+        
+        if (team.length === 0) {
+            teamGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#8E8E93;"><i class="fas fa-users" style="font-size:3rem;margin-bottom:20px;"></i><h3>Team Coming Soon</h3></div>';
+            return;
+        }
+        
+        teamGrid.innerHTML = team.map(member => `
+            <div class="team-card">
+                <div class="team-image">
+                    <img src="${member.image}" alt="${member.name}" loading="lazy">
+                </div>
+                <div class="team-info">
+                    <h3>${member.name}</h3>
+                    <div class="team-role">${member.role}</div>
+                    <p class="team-bio">${member.bio}</p>
+                    <div class="social-links">
+                        <a href="mailto:${member.email}"><i class="fas fa-envelope"></i></a>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // ===== CONTACT PAGE =====
+    function loadContactPage() {
+        loadContactInfo();
+        initContactForm();
+    }
+
+    function loadContactInfo() {
+        const settings = JSON.parse(localStorage.getItem('absta_settings') || '{}');
+        
+        const contactAddress = document.getElementById('contactAddress');
+        const contactPhone = document.getElementById('contactPhone');
+        const contactEmail = document.getElementById('contactEmail');
+        const footerAddress = document.getElementById('footerAddress');
+        const footerPhone = document.getElementById('footerPhone');
+        const footerEmail = document.getElementById('footerEmail');
+        
+        if (contactAddress) contactAddress.textContent = settings.companyAddress || 'Dar es Salaam, Tanzania';
+        if (contactPhone) contactPhone.textContent = settings.companyPhone || '+255 784 123 456';
+        if (contactEmail) contactEmail.textContent = settings.companyEmail || 'info@abstacreatives.com';
+        if (footerAddress) footerAddress.textContent = settings.companyAddress || 'Dar es Salaam, Tanzania';
+        if (footerPhone) footerPhone.textContent = settings.companyPhone || '+255 784 123 456';
+        if (footerEmail) footerEmail.textContent = settings.companyEmail || 'info@abstacreatives.com';
+    }
+
+    function initContactForm() {
+        const contactForm = document.getElementById('contactForm');
+        if (contactForm) {
+            contactForm.onsubmit = function(e) {
+                e.preventDefault();
+                
+                const message = {
+                    id: Date.now(),
+                    name: document.getElementById('name').value,
+                    email: document.getElementById('email').value,
+                    subject: document.getElementById('subject').value,
+                    message: document.getElementById('message').value,
+                    date: new Date().toISOString(),
+                    read: false
+                };
+                
+                const messages = JSON.parse(localStorage.getItem('absta_messages') || '[]');
+                messages.unshift(message);
+                localStorage.setItem('absta_messages', JSON.stringify(messages));
+                
+                if (database) {
+                    const messagesObj = {};
+                    messages.forEach(msg => { messagesObj[msg.id] = msg; });
+                    syncToFirebase('messages', messagesObj);
+                }
+                
+                alert('Thank you for your message!');
+                contactForm.reset();
+                if (typeof updateAdminStats === 'function') updateAdminStats();
+            };
+        }
+    }
+
+    // ===== LIGHTBOX SYSTEM =====
+    let currentImageIndex = 0;
+    let currentImageArray = [];
+
+    function addImageClickListeners() {
+        document.querySelectorAll('.portfolio-image img, .team-image img').forEach(img => {
+            img.onclick = function(e) {
+                e.stopPropagation();
+                openLightbox(this);
+            };
+        });
+    }
+
+    function openLightbox(element) {
+        const modal = document.getElementById('imageModal');
+        const modalImg = document.getElementById('modalImage');
+        const captionText = document.getElementById('modalCaption');
+        
+        const allImages = [];
+        
+        if (element.closest('.portfolio-grid')) {
+            document.querySelectorAll('.portfolio-image img').forEach((img, index) => {
+                allImages.push({ src: img.src, caption: img.alt || 'Portfolio Image' });
+                if (img === element) currentImageIndex = index;
+            });
+        } else if (element.closest('.team-grid')) {
+            document.querySelectorAll('.team-image img').forEach((img, index) => {
+                allImages.push({ src: img.src, caption: img.alt || 'Team Member' });
+                if (img === element) currentImageIndex = index;
+            });
+        } else {
+            allImages.push({ src: element.src, caption: element.alt || 'Image' });
+            currentImageIndex = 0;
+        }
+        
+        currentImageArray = allImages;
+        if (modal) {
+            modal.style.display = 'block';
+            modalImg.src = element.src;
+            captionText.innerHTML = element.alt || 'Image';
+        }
+    }
+
+    function initLightbox() {
+        const modal = document.getElementById('imageModal');
+        const closeBtn = document.querySelector('.image-modal-close');
+        const prevBtn = document.getElementById('prevImageBtn');
+        const nextBtn = document.getElementById('nextImageBtn');
+        
+        if (closeBtn) {
+            closeBtn.onclick = () => {
+                if (modal) modal.style.display = 'none';
+            };
+        }
+        
+        if (prevBtn) {
+            prevBtn.onclick = () => {
+                if (currentImageArray.length > 0) {
+                    currentImageIndex = (currentImageIndex - 1 + currentImageArray.length) % currentImageArray.length;
+                    const modalImg = document.getElementById('modalImage');
+                    const captionText = document.getElementById('modalCaption');
+                    if (modalImg) modalImg.src = currentImageArray[currentImageIndex].src;
+                    if (captionText) captionText.innerHTML = currentImageArray[currentImageIndex].caption;
+                }
+            };
+        }
+        
+        if (nextBtn) {
+            nextBtn.onclick = () => {
+                if (currentImageArray.length > 0) {
+                    currentImageIndex = (currentImageIndex + 1) % currentImageArray.length;
+                    const modalImg = document.getElementById('modalImage');
+                    const captionText = document.getElementById('modalCaption');
+                    if (modalImg) modalImg.src = currentImageArray[currentImageIndex].src;
+                    if (captionText) captionText.innerHTML = currentImageArray[currentImageIndex].caption;
+                }
+            };
+        }
+        
+        if (modal) {
+            modal.onclick = (e) => {
+                if (e.target === modal) modal.style.display = 'none';
+            };
+        }
+        
+        document.addEventListener('keydown', (e) => {
+            if (modal && modal.style.display === 'block') {
+                if (e.key === 'Escape') modal.style.display = 'none';
+                else if (e.key === 'ArrowLeft' && prevBtn) prevBtn.click();
+                else if (e.key === 'ArrowRight' && nextBtn) nextBtn.click();
+            }
+        });
+    }
+
+    // ===== FOOTER =====
+    function loadFooterData() {
+        const settings = JSON.parse(localStorage.getItem('absta_settings') || '{}');
+        const socialLinks = document.getElementById('socialLinks');
+        
+        if (settings.social && socialLinks) {
+            socialLinks.innerHTML = `
+                <a href="${settings.social.instagram || '#'}" target="_blank"><i class="fab fa-instagram"></i></a>
+                <a href="${settings.social.facebook || '#'}" target="_blank"><i class="fab fa-facebook"></i></a>
+                <a href="${settings.social.twitter || '#'}" target="_blank"><i class="fab fa-twitter"></i></a>
+                <a href="${settings.social.youtube || '#'}" target="_blank"><i class="fab fa-youtube"></i></a>
+            `;
+        }
+    }
+
+    function updateCurrentYear() {
+        const yearSpan = document.getElementById('currentYear');
+        if (yearSpan) yearSpan.textContent = new Date().getFullYear();
+    }
+
+    // ===== ADMIN FUNCTIONS (SIMPLIFIED) =====
+    function checkAdminAccess() {
+        if (!currentUser) navigateTo('login');
+        else loadAdminDashboard();
+    }
+
+    function checkLoginStatus() {
+        const loggedInUser = localStorage.getItem('absta_logged_in');
+        if (loggedInUser) currentUser = JSON.parse(loggedInUser);
+    }
+
+    function loadAdminDashboard() {
+        if (typeof updateAdminStats === 'function') updateAdminStats();
+        if (typeof loadAdminProjects === 'function') loadAdminProjects();
+        if (typeof loadAdminTeam === 'function') loadAdminTeam();
+        if (typeof loadAdminMessages === 'function') loadAdminMessages();
+        if (typeof loadAdminSettings === 'function') loadAdminSettings();
+    }
+
     function updateAdminStats() {
         const projects = JSON.parse(localStorage.getItem('absta_projects') || '[]');
         const team = JSON.parse(localStorage.getItem('absta_team') || '[]');
@@ -3361,34 +3323,372 @@
         if (teamCount) teamCount.textContent = team.length;
         if (messagesCount) messagesCount.textContent = messages.length;
     }
-    
-    // Add other admin functions here (projects, team, messages CRUD)
-    // ... (keep your existing admin functions but remove any that cause loops)
-    
-    // Make sure these are available globally
-    window.navigateTo = navigateTo;
-    window.loadHomePage = loadHomePage;
-    window.loadPortfolioPage = loadPortfolioPage;
-    window.loadAboutPage = loadAboutPage;
-    window.loadContactPage = loadContactPage;
-    window.loadAdminDashboard = loadAdminDashboard;
-    window.uploadLogoToFirebase = uploadLogoToFirebase;
-    window.deleteLogoFromFirebase = function() {
-        if (database && confirm('Delete logo from Firebase?')) {
-            database.ref('settings/websiteLogo').remove()
-                .then(() => setDefaultLogo())
-                .catch(err => alert('Error: ' + err.message));
+
+    function loadAdminProjects() {
+        const tbody = document.getElementById('projectsTableBody');
+        if (!tbody) return;
+        
+        const projects = JSON.parse(localStorage.getItem('absta_projects') || '[]');
+        
+        if (projects.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;">No projects</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = projects.map(project => `
+            <tr>
+                <td style="color:white;">${project.title}</td>
+                <td>${project.category}</td>
+                <td>${new Date(project.date).toLocaleDateString()}</td>
+                <td><img src="${project.image}" style="width:50px;height:50px;object-fit:cover;border-radius:5px;"></td>
+                <td>
+                    <button class="action-btn edit-btn" onclick="editProject(${project.id})"><i class="fas fa-edit"></i></button>
+                    <button class="action-btn delete-btn" onclick="deleteProject(${project.id})"><i class="fas fa-trash"></i></button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function loadAdminTeam() {
+        const tbody = document.getElementById('teamTableBody');
+        if (!tbody) return;
+        
+        const team = JSON.parse(localStorage.getItem('absta_team') || '[]');
+        
+        if (team.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;">No team members</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = team.map(member => `
+            <tr>
+                <td style="color:white;">${member.name}</td>
+                <td>${member.role}</td>
+                <td>${member.email}</td>
+                <td><img src="${member.image}" style="width:50px;height:50px;object-fit:cover;border-radius:5px;"></td>
+                <td>
+                    <button class="action-btn edit-btn" onclick="editTeamMember(${member.id})"><i class="fas fa-edit"></i></button>
+                    <button class="action-btn delete-btn" onclick="deleteTeamMember(${member.id})"><i class="fas fa-trash"></i></button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function loadAdminMessages() {
+        const tbody = document.getElementById('messagesTableBody');
+        if (!tbody) return;
+        
+        const messages = JSON.parse(localStorage.getItem('absta_messages') || '[]');
+        
+        if (messages.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;">No messages</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = messages.map(msg => `
+            <tr style="${msg.read ? '' : 'background:rgba(255,51,102,0.05);'}">
+                <td style="color:white;${!msg.read ? 'font-weight:600;' : ''}">${msg.name}</td>
+                <td>${msg.email}</td>
+                <td>${msg.subject}</td>
+                <td>${new Date(msg.date).toLocaleDateString()}</td>
+                <td>
+                    <button class="action-btn edit-btn" onclick="viewMessage(${msg.id})"><i class="fas fa-eye"></i></button>
+                    <button class="action-btn delete-btn" onclick="deleteMessage(${msg.id})"><i class="fas fa-trash"></i></button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function loadAdminSettings() {
+        const settings = JSON.parse(localStorage.getItem('absta_settings') || '{}');
+        
+        const companyName = document.getElementById('companyName');
+        const companyEmail = document.getElementById('companyEmail');
+        const companyPhone = document.getElementById('companyPhone');
+        const companyAddress = document.getElementById('companyAddress');
+        const companyAbout = document.getElementById('companyAbout');
+        
+        if (companyName) companyName.value = settings.companyName || '';
+        if (companyEmail) companyEmail.value = settings.companyEmail || '';
+        if (companyPhone) companyPhone.value = settings.companyPhone || '';
+        if (companyAddress) companyAddress.value = settings.companyAddress || '';
+        if (companyAbout) companyAbout.value = settings.companyAbout || '';
+        
+        setupLogoUploadInAdmin();
+    }
+
+    function setupLogoUploadInAdmin() {
+        setTimeout(() => {
+            const uploadArea = document.querySelector('.logo-upload-area');
+            if (!uploadArea) return;
+            
+            let fileInput = document.getElementById('logoFileInput');
+            if (!fileInput) {
+                fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.id = 'logoFileInput';
+                fileInput.accept = 'image/*';
+                fileInput.style.display = 'none';
+                fileInput.onchange = (e) => {
+                    if (e.target.files && e.target.files[0]) {
+                        uploadLogoToFirebase(e.target);
+                    }
+                };
+                uploadArea.parentNode.appendChild(fileInput);
+            }
+            
+            uploadArea.onclick = () => document.getElementById('logoFileInput').click();
+            
+            if (!document.getElementById('deleteLogoBtn')) {
+                const deleteBtn = document.createElement('button');
+                deleteBtn.id = 'deleteLogoBtn';
+                deleteBtn.type = 'button';
+                deleteBtn.className = 'btn btn-danger';
+                deleteBtn.style.marginTop = '15px';
+                deleteBtn.style.width = '100%';
+                deleteBtn.innerHTML = '<i class="fas fa-trash"></i> Delete Logo';
+                deleteBtn.onclick = () => {
+                    if (database && confirm('Delete logo from Firebase?')) {
+                        database.ref('settings/websiteLogo').remove()
+                            .then(() => setDefaultLogo())
+                            .catch(err => alert('Error: ' + err.message));
+                    }
+                };
+                uploadArea.parentNode.appendChild(deleteBtn);
+            }
+        }, 100);
+    }
+
+    // Simple admin CRUD functions
+    window.editProject = (id) => {
+        const project = JSON.parse(localStorage.getItem('absta_projects') || '[]').find(p => p.id === id);
+        if (project) {
+            const newTitle = prompt('Edit title:', project.title);
+            if (newTitle) {
+                project.title = newTitle;
+                const projects = JSON.parse(localStorage.getItem('absta_projects') || '[]');
+                const updated = projects.map(p => p.id === id ? project : p);
+                localStorage.setItem('absta_projects', JSON.stringify(updated));
+                if (database) syncToFirebase('projects', updated);
+                loadAdminProjects();
+                refreshCurrentPage();
+            }
         }
     };
     
-    // Back to top button
+    window.deleteProject = (id) => {
+        if (confirm('Delete this project?')) {
+            let projects = JSON.parse(localStorage.getItem('absta_projects') || '[]');
+            projects = projects.filter(p => p.id !== id);
+            localStorage.setItem('absta_projects', JSON.stringify(projects));
+            if (database) syncToFirebase('projects', projects);
+            loadAdminProjects();
+            refreshCurrentPage();
+        }
+    };
+    
+    window.editTeamMember = (id) => {
+        const member = JSON.parse(localStorage.getItem('absta_team') || '[]').find(m => m.id === id);
+        if (member) {
+            const newName = prompt('Edit name:', member.name);
+            if (newName) {
+                member.name = newName;
+                const team = JSON.parse(localStorage.getItem('absta_team') || '[]');
+                const updated = team.map(m => m.id === id ? member : m);
+                localStorage.setItem('absta_team', JSON.stringify(updated));
+                if (database) syncToFirebase('team', updated);
+                loadAdminTeam();
+                refreshCurrentPage();
+            }
+        }
+    };
+    
+    window.deleteTeamMember = (id) => {
+        if (confirm('Delete this team member?')) {
+            let team = JSON.parse(localStorage.getItem('absta_team') || '[]');
+            team = team.filter(m => m.id !== id);
+            localStorage.setItem('absta_team', JSON.stringify(team));
+            if (database) syncToFirebase('team', team);
+            loadAdminTeam();
+            refreshCurrentPage();
+        }
+    };
+    
+    window.viewMessage = (id) => {
+        const messages = JSON.parse(localStorage.getItem('absta_messages') || '[]');
+        const msg = messages.find(m => m.id === id);
+        if (msg) {
+            alert(`From: ${msg.name}\nEmail: ${msg.email}\nSubject: ${msg.subject}\n\nMessage: ${msg.message}`);
+            msg.read = true;
+            localStorage.setItem('absta_messages', JSON.stringify(messages));
+            if (database) syncToFirebase('messages', messages);
+            loadAdminMessages();
+        }
+    };
+    
+    window.deleteMessage = (id) => {
+        if (confirm('Delete this message?')) {
+            let messages = JSON.parse(localStorage.getItem('absta_messages') || '[]');
+            messages = messages.filter(m => m.id !== id);
+            localStorage.setItem('absta_messages', JSON.stringify(messages));
+            if (database) syncToFirebase('messages', messages);
+            loadAdminMessages();
+            if (typeof updateAdminStats === 'function') updateAdminStats();
+        }
+    };
+    
+    window.showAdminSection = (section) => {
+        document.querySelectorAll('.admin-section').forEach(sec => sec.classList.remove('active'));
+        document.getElementById(`${section}-section`)?.classList.add('active');
+        
+        document.querySelectorAll('#adminTabs .admin-tab').forEach(tab => tab.classList.remove('active'));
+        const tab = Array.from(document.querySelectorAll('#adminTabs .admin-tab')).find(t => t.textContent.toLowerCase().includes(section));
+        if (tab) tab.classList.add('active');
+        
+        if (section === 'projects') loadAdminProjects();
+        else if (section === 'team') loadAdminTeam();
+        else if (section === 'messages') loadAdminMessages();
+        else if (section === 'settings') loadAdminSettings();
+    };
+    
+    window.logout = () => {
+        if (confirm('Logout?')) {
+            currentUser = null;
+            localStorage.removeItem('absta_logged_in');
+            navigateTo('home');
+        }
+    };
+    
+    window.closeModal = (modalId) => {
+        document.getElementById(modalId)?.classList.remove('active');
+    };
+    
+    window.openProjectModal = () => {
+        const newTitle = prompt('Enter project title:');
+        if (newTitle) {
+            const newProject = {
+                id: Date.now(),
+                title: newTitle,
+                description: prompt('Enter description:') || '',
+                category: prompt('Enter category (wedding/commercial/music/documentary/photography):') || 'wedding',
+                image: 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=800',
+                date: new Date().toISOString().split('T')[0]
+            };
+            const projects = JSON.parse(localStorage.getItem('absta_projects') || '[]');
+            projects.unshift(newProject);
+            localStorage.setItem('absta_projects', JSON.stringify(projects));
+            if (database) syncToFirebase('projects', projects);
+            loadAdminProjects();
+            refreshCurrentPage();
+            alert('Project added!');
+        }
+    };
+    
+    window.openTeamModal = () => {
+        const newName = prompt('Enter team member name:');
+        if (newName) {
+            const newMember = {
+                id: Date.now(),
+                name: newName,
+                role: prompt('Enter role:') || 'Team Member',
+                email: prompt('Enter email:') || '',
+                bio: prompt('Enter bio:') || '',
+                image: 'https://images.unsplash.com/photo-1494790108755-2616b786d4d9?w=400'
+            };
+            const team = JSON.parse(localStorage.getItem('absta_team') || '[]');
+            team.unshift(newMember);
+            localStorage.setItem('absta_team', JSON.stringify(team));
+            if (database) syncToFirebase('team', team);
+            loadAdminTeam();
+            refreshCurrentPage();
+            alert('Team member added!');
+        }
+    };
+
+    // ===== LOGIN FORM =====
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        loginForm.onsubmit = (e) => {
+            e.preventDefault();
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+            const adminUser = JSON.parse(localStorage.getItem('absta_admin') || '{}');
+            
+            if (username === adminUser.username && password === adminUser.password) {
+                currentUser = { username, isAdmin: true };
+                localStorage.setItem('absta_logged_in', JSON.stringify(currentUser));
+                navigateTo('admin');
+                alert('Login successful!');
+            } else {
+                alert('Invalid credentials!');
+            }
+        };
+    }
+
+    // ===== SETTINGS FORM =====
+    const settingsForm = document.getElementById('settingsForm');
+    if (settingsForm) {
+        settingsForm.onsubmit = (e) => {
+            e.preventDefault();
+            const settings = {
+                companyName: document.getElementById('companyName')?.value || '',
+                companyEmail: document.getElementById('companyEmail')?.value || '',
+                companyPhone: document.getElementById('companyPhone')?.value || '',
+                companyAddress: document.getElementById('companyAddress')?.value || '',
+                companyAbout: document.getElementById('companyAbout')?.value || '',
+                social: {
+                    instagram: 'https://instagram.com/abstacreatives',
+                    facebook: 'https://facebook.com/abstacreatives',
+                    twitter: 'https://twitter.com/abstacreatives',
+                    youtube: 'https://youtube.com/abstacreatives'
+                }
+            };
+            localStorage.setItem('absta_settings', JSON.stringify(settings));
+            if (database) syncToFirebase('settings', settings);
+            loadContactInfo();
+            loadFooterData();
+            alert('Settings saved!');
+        };
+    }
+
+    // ===== BACK TO TOP BUTTON =====
     const backToTop = document.createElement('button');
     backToTop.innerHTML = '<i class="fas fa-arrow-up"></i>';
-    backToTop.style.cssText = `position:fixed;bottom:30px;right:30px;width:50px;height:50px;background:var(--gradient);color:white;border:none;border-radius:50%;cursor:pointer;opacity:0;visibility:hidden;transition:all 0.4s;z-index:999;`;
+    backToTop.style.cssText = `position:fixed;bottom:30px;right:30px;width:50px;height:50px;background:linear-gradient(135deg,#FF3366,#3366FF);color:white;border:none;border-radius:50%;cursor:pointer;opacity:0;visibility:hidden;transition:all 0.4s;z-index:999;`;
     document.body.appendChild(backToTop);
-    backToTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
-    window.addEventListener('scroll', () => {
+    backToTop.onclick = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.onscroll = () => {
         backToTop.style.opacity = window.scrollY > 500 ? '1' : '0';
         backToTop.style.visibility = window.scrollY > 500 ? 'visible' : 'hidden';
+    };
+
+    // ===== DOM CONTENT LOADED =====
+    let isDOMLoaded = false;
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        if (isDOMLoaded) return;
+        isDOMLoaded = true;
+        
+        // Hide loader
+        setTimeout(() => {
+            const loader = document.getElementById('loader');
+            if (loader) {
+                loader.style.opacity = '0';
+                setTimeout(() => { if (loader) loader.style.display = 'none'; }, 500);
+            }
+        }, 800);
+        
+        initNavigation();
+        initData();
+        initFirebase();
+        initLightbox();
+        loadHomePage();
+        updateCurrentYear();
+        checkLoginStatus();
+        
+        // For pages that need image listeners
+        setTimeout(addImageClickListeners, 500);
     });
 </script>
+
+  
