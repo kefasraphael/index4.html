@@ -2264,170 +2264,185 @@ body::after {
                     <i class="fas fa-sign-out-alt"></i> Logout
                 </div>
             </div>
+            
             <div class="admin-content">
-    <!-- Projects Section -->
-    <div id="projects-section" class="admin-section active">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-            <h3 style="color: white;">Manage Projects</h3>
-            <button class="btn btn-primary" onclick="openProjectModal()">
-                <i class="fas fa-plus"></i> Add New Project
+                <div id="projects-section" class="admin-section active">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                        <h3 style="color: white;">Manage Projects</h3>
+                        <button class="btn btn-primary" onclick="openProjectModal()">
+                            <i class="fas fa-plus"></i> Add New Project
+                        </button>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table class="admin-table" id="projectsTable">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Category</th>
+                                    <th>Date</th>
+                                    <th>Image</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="projectsTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div id="team-section" class="admin-section">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                        <h3 style="color: white;">Manage Team</h3>
+                        <button class="btn btn-primary" onclick="openTeamModal()">
+                            <i class="fas fa-plus"></i> Add Team Member
+                        </button>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table class="admin-table" id="teamTable">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Role</th>
+                                    <th>Email</th>
+                                    <th>Image</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="teamTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div id="messages-section" class="admin-section">
+                    <h3 style="color: white; margin-bottom: 30px;">Contact Messages</h3>
+                    
+                    <div class="table-container">
+                        <table class="admin-table" id="messagesTable">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Subject</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="messagesTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div id="settings-section" class="admin-section">
+                    <h3 style="color: white; margin-bottom: 30px;">Website Settings</h3>
+                       <!-- Category Manager -->
+    <div style="margin-bottom: 40px; padding: 20px; background: var(--glass-bg); border-radius: 15px;">
+        <h4 style="color: white; margin-bottom: 20px;">Manage Portfolio Categories</h4>
+        <div id="categoryList" class="category-list"></div>
+        <div class="add-category-form">
+            <input type="text" id="newCategoryName" class="form-control" placeholder="New category name" style="flex: 1;">
+            <input type="text" id="newCategoryValue" class="form-control" placeholder="Category value (e.g., fashion)" style="flex: 1;">
+            <button type="button" class="btn btn-primary" onclick="addNewCategory()">
+                <i class="fas fa-plus"></i> Add Category
             </button>
-        </div>
-        
-        <div class="table-container">
-            <table class="admin-table" id="projectsTable">
-                <thead>
-                    <tr><th>Title</th><th>Category</th><th>Date</th><th>Image</th><th>Actions</th></tr>
-                </thead>
-                <tbody id="projectsTableBody"></tbody>
-            </table>
         </div>
     </div>
     
-    <!-- Team Section -->
-    <div id="team-section" class="admin-section">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-            <h3 style="color: white;">Manage Team</h3>
-            <button class="btn btn-primary" onclick="openTeamModal()">
-                <i class="fas fa-plus"></i> Add Team Member
-            </button>
-        </div>
-        
-        <div class="table-container">
-            <table class="admin-table" id="teamTable">
-                <thead>
-                    <tr><th>Name</th><th>Role</th><th>Email</th><th>Image</th><th>Actions</th></tr>
-                </thead>
-                <tbody id="teamTableBody"></tbody>
-            </table>
-        </div>
-    </div>
+    <h4 style="color: white; margin-bottom: 20px;">General Settings</h4>
+                    
+                    <form id="settingsForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="companyName">Company Name</label>
+                                <input type="text" id="companyName" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="companyEmail">Company Email</label>
+                                <input type="email" id="companyEmail" class="form-control">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="companyPhone">Company Phone</label>
+                                <input type="tel" id="companyPhone" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="companyAddress">Company Address</label>
+                                <input type="text" id="companyAddress" class="form-control">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="companyAbout">About Company</label>
+                            <textarea id="companyAbout" class="form-control" rows="4"></textarea>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save"></i> Save Settings
+                            </button>
+                            <button type="button" class="btn btn-danger" onclick="resetSettings()">
+                                <i class="fas fa-undo"></i> Reset to Default
+                            </button>
+                        </div>
+                    </form>
+                    <!-- Price Plans Manager -->
+<div id="pricing-section" class="admin-section">
+    <h3 style="color: white; margin-bottom: 30px;">Manage Pricing Plans</h3>
     
-    <!-- Services Section (NEW - SAHIHI) -->
-    <div id="services-section" class="admin-section">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-            <h3 style="color: white;">Manage Services</h3>
-            <button class="btn btn-primary" onclick="openServiceModal()">
-                <i class="fas fa-plus"></i> Add New Service
-            </button>
-        </div>
-        <div id="servicesList"></div>
-    </div>
+    <div id="pricingPlansList"></div>
     
-    <!-- Pricing Section (NEW - SAHIHI) -->
-    <div id="pricing-section" class="admin-section">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-            <h3 style="color: white;">Manage Pricing Plans</h3>
-            <button class="btn btn-primary" onclick="openPricingModal()">
-                <i class="fas fa-plus"></i> Add New Plan
-            </button>
-        </div>
-        <div id="pricingPlansList"></div>
-    </div>
-
-           <!-- Service Modal -->
-<div class="modal" id="serviceModal">
+    <button class="btn btn-primary" onclick="openPricingModal()" style="margin-top: 20px;">
+        <i class="fas fa-plus"></i> Add New Plan
+    </button>
+</div>
+             <!-- Pricing Modal -->
+<div class="modal" id="pricingModal">
     <div class="modal-content">
         <div class="modal-header">
-            <h3 id="modalServiceTitle">Add New Service</h3>
-            <button class="modal-close" onclick="closeModal('serviceModal')">
+            <h3 id="modalPricingTitle">Add Pricing Plan</h3>
+            <button class="modal-close" onclick="closeModal('pricingModal')">
                 <i class="fas fa-times"></i>
             </button>
         </div>
         <div class="modal-body">
-            <form id="serviceForm">
-                <input type="hidden" id="serviceId">
+            <form id="pricingForm">
+                <input type="hidden" id="pricingId">
                 <div class="form-group">
-                    <label>Service Name</label>
-                    <input type="text" id="serviceName" class="form-control" required>
+                    <label>Plan Name</label>
+                    <input type="text" id="pricingName" class="form-control" required>
                 </div>
                 <div class="form-group">
-                    <label>Icon (FontAwesome class)</label>
-                    <input type="text" id="serviceIcon" class="form-control" placeholder="e.g., fas fa-film" required>
+                    <label>Price (e.g., $999)</label>
+                    <input type="text" id="pricingPrice" class="form-control" required>
                 </div>
                 <div class="form-group">
-                    <label>Description</label>
-                    <textarea id="serviceDescription" class="form-control" rows="3" required></textarea>
+                    <label>Features (one per line)</label>
+                    <textarea id="pricingFeatures" class="form-control" rows="5" required placeholder="2-3 Minute Video&#10;1 Day Shooting&#10;Basic Editing&#10;1 Revision"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Popular?</label>
+                    <select id="pricingPopular" class="form-control">
+                        <option value="false">No</option>
+                        <option value="true">Yes (Most Popular)</option>
+                    </select>
                 </div>
                 <div class="form-actions">
-                    <button type="submit" class="btn btn-success">Save Service</button>
-                    <button type="button" class="btn btn-outline" onclick="closeModal('serviceModal')">Cancel</button>
-                    <button type="button" class="btn btn-danger" id="deleteServiceBtn" style="display: none;" onclick="deleteService()">Delete Service</button>
+                    <button type="submit" class="btn btn-success">Save Plan</button>
+                    <button type="button" class="btn btn-outline" onclick="closeModal('pricingModal')">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="deletePricingBtn" style="display: none;" onclick="deletePricingPlan()">Delete Plan</button>
                 </div>
             </form>
         </div>
     </div>
-</div>     
-    
-    <!-- Messages Section -->
-    <div id="messages-section" class="admin-section">
-        <h3 style="color: white; margin-bottom: 30px;">Contact Messages</h3>
-        <div class="table-container">
-            <table class="admin-table" id="messagesTable">
-                <thead>
-                    <tr><th>Name</th><th>Email</th><th>Subject</th><th>Date</th><th>Actions</th></tr>
-                </thead>
-                <tbody id="messagesTableBody"></tbody>
-            </table>
-        </div>
-    </div>
-    
-    <!-- Settings Section (Category Manager + General Settings) -->
-    <div id="settings-section" class="admin-section">
-        <!-- Category Manager -->
-        <div style="margin-bottom: 40px; padding: 20px; background: var(--glass-bg); border-radius: 15px;">
-            <h4 style="color: white; margin-bottom: 20px;">Manage Portfolio Categories</h4>
-            <div id="categoryList" class="category-list"></div>
-            <div class="add-category-form">
-                <input type="text" id="newCategoryName" class="form-control" placeholder="Category name (e.g., Wedding Films)" style="flex: 1;">
-                <input type="text" id="newCategoryValue" class="form-control" placeholder="Category value (e.g., wedding)" style="flex: 1;">
-                <button type="button" class="btn btn-primary" onclick="addNewCategory()">
-                    <i class="fas fa-plus"></i> Add Category
-                </button>
-            </div>
-        </div>
-        
-        <h4 style="color: white; margin-bottom: 20px;">General Settings</h4>
-        <form id="settingsForm">
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="companyName">Company Name</label>
-                    <input type="text" id="companyName" class="form-control">
-                </div>
-                <div class="form-group">
-                    <label for="companyEmail">Company Email</label>
-                    <input type="email" id="companyEmail" class="form-control">
-                </div>
-            </div>
-            
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="companyPhone">Company Phone</label>
-                    <input type="tel" id="companyPhone" class="form-control">
-                </div>
-                <div class="form-group">
-                    <label for="companyAddress">Company Address</label>
-                    <input type="text" id="companyAddress" class="form-control">
-                </div>
-            </div>
-            
-            <div class="form-group">
-                <label for="companyAbout">About Company</label>
-                <textarea id="companyAbout" class="form-control" rows="4"></textarea>
-            </div>
-            
-            <div class="form-actions">
-                <button type="submit" class="btn btn-success">
-                    <i class="fas fa-save"></i> Save Settings
-                </button>
-                <button type="button" class="btn btn-danger" onclick="resetSettings()">
-                    <i class="fas fa-undo"></i> Reset to Default
-                </button>
-            </div>
-        </form>
-    </div>
 </div>
-           
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Login Page -->
     <div id="login-page" class="page">
         <div class="login-container">
@@ -3265,22 +3280,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 localStorage.setItem('absta_admin', JSON.stringify(adminUser));
             }
         }
-        // Ongeza hizi kwenye initData() kabla ya absta_admin
-if (!localStorage.getItem('absta_services')) {
-    localStorage.setItem('absta_services', JSON.stringify([
-        { id: 1, name: 'Cinematic Production', icon: 'fas fa-film', description: 'Full-scale video production' },
-        { id: 2, name: 'Photography', icon: 'fas fa-camera', description: 'Creative photography sessions' },
-        { id: 3, name: 'Video Editing', icon: 'fas fa-video', description: 'Professional editing services' }
-    ]));
-}
-
-if (!localStorage.getItem('absta_pricing')) {
-    localStorage.setItem('absta_pricing', JSON.stringify([
-        { id: 1, name: 'Basic', price: '$999', features: ['2-3 Minute Video', '1 Day Shooting'], popular: false },
-        { id: 2, name: 'Professional', price: '$2,499', features: ['3-5 Minute Video', '2 Days Shooting', 'Drone'], popular: true },
-        { id: 3, name: 'Premium', price: '$4,999', features: ['5-10 Minute Video', '3+ Days Shooting', 'Unlimited'], popular: false }
-    ]));
-}
 
         // ===== FILE UPLOAD HANDLER =====
         function handleImageUpload(input, previewId, hiddenInputId) {
@@ -3559,17 +3558,15 @@ if (!localStorage.getItem('absta_pricing')) {
             }
             loadAdminDashboard();
         }
-    
+
         function loadAdminDashboard() {
-    updateAdminStats();
-    loadAdminProjects();
-    loadAdminTeam();
-    loadAdminMessages();
-    loadAdminSettings();
-    if (typeof loadServices === 'function') loadServices();
-    if (typeof loadPricingPlans === 'function') loadPricingPlans();
-}       
-        
+            updateAdminStats();
+            loadAdminProjects();
+            loadAdminTeam();
+            loadAdminMessages();
+            loadAdminSettings();
+        }
+
         function updateAdminStats() {
             const projects = JSON.parse(localStorage.getItem('absta_projects') || '[]');
             const team = JSON.parse(localStorage.getItem('absta_team') || '[]');
@@ -3584,49 +3581,44 @@ if (!localStorage.getItem('absta_pricing')) {
             if (messagesCount) messagesCount.textContent = messages.length;
         }
 
-      function showAdminSection(section) {
-    document.querySelectorAll('.admin-section').forEach(sec => {
-        sec.classList.remove('active');
-    });
-    
-    document.querySelectorAll('#adminTabs .admin-tab').forEach(tab => {
-        tab.classList.remove('active');
-    });
-    
-    const sectionElement = document.getElementById(`${section}-section`);
-    if (sectionElement) {
-        sectionElement.classList.add('active');
-    }
-    
-    const tabs = document.querySelectorAll('#adminTabs .admin-tab');
-    for (let i = 0; i < tabs.length; i++) {
-        if (tabs[i].getAttribute('onclick')?.includes(section)) {
-            tabs[i].classList.add('active');
-            break;
+        function showAdminSection(section) {
+            document.querySelectorAll('.admin-section').forEach(sec => {
+                sec.classList.remove('active');
+            });
+            
+            document.querySelectorAll('#adminTabs .admin-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            const sectionElement = document.getElementById(`${section}-section`);
+            if (sectionElement) {
+                sectionElement.classList.add('active');
+            }
+            
+            const tabs = document.querySelectorAll('#adminTabs .admin-tab');
+            for (let i = 0; i < tabs.length - 1; i++) {
+                if (tabs[i].getAttribute('onclick')?.includes(section)) {
+                    tabs[i].classList.add('active');
+                    break;
+                }
+            }
+            
+            switch(section) {
+                case 'projects':
+                    loadAdminProjects();
+                    break;
+                case 'team':
+                    loadAdminTeam();
+                    break;
+                case 'messages':
+                    loadAdminMessages();
+                    break;
+                case 'settings':
+                    loadAdminSettings();
+                    break;
+            }
         }
-    }
-    
-    switch(section) {
-        case 'projects':
-            loadAdminProjects();
-            break;
-        case 'team':
-            loadAdminTeam();
-            break;
-        case 'services':
-            if (typeof loadServices === 'function') loadServices();
-            break;
-        case 'pricing':
-            if (typeof loadPricingPlans === 'function') loadPricingPlans();
-            break;
-        case 'messages':
-            loadAdminMessages();
-            break;
-        case 'settings':
-            loadAdminSettings();
-            break;
-    }
-}
+
         // ===== ADMIN PROJECTS =====
         function loadAdminProjects() {
             const tbody = document.getElementById('projectsTableBody');
@@ -4087,7 +4079,7 @@ if (!localStorage.getItem('absta_pricing')) {
                 social: {
                     instagram: 'https://instagram.com/abstacreatives',
                     facebook: 'https://facebook.com/abstacreatives',
-                    twitter: 'https://X.com/abstacreatives',
+                    twitter: 'https://twitter.com/abstacreatives',
                     youtube: 'https://youtube.com/abstacreatives'
                 }
             };
@@ -4546,120 +4538,6 @@ document.getElementById('pricingForm').addEventListener('submit', function(e) {
     alert(`Pricing plan ${editingPricingId ? 'updated' : 'added'} successfully!`);
 });
         });
-        // ===== SERVICES MANAGEMENT =====
-let editingServiceId = null;
-
-function loadServices() {
-    const services = JSON.parse(localStorage.getItem('absta_services') || '[]');
-    const container = document.getElementById('servicesList');
-    if (!container) return;
-    
-    if (services.length === 0) {
-        const defaultServices = [
-            { id: 1, name: 'Cinematic Production', icon: 'fas fa-film', description: 'Full-scale video production with cinematic quality and professional grading' },
-            { id: 2, name: 'Photography', icon: 'fas fa-camera', description: 'Creative photography sessions for brands, products, and events' },
-            { id: 3, name: 'Video Editing', icon: 'fas fa-video', description: 'Professional editing, color grading, and post-production services' }
-        ];
-        localStorage.setItem('absta_services', JSON.stringify(defaultServices));
-        loadServices();
-        return;
-    }
-    
-    container.innerHTML = `
-        <div class="services-grid">
-            ${services.map(service => `
-                <div class="service-card" style="position: relative;">
-                    <div class="service-icon"><i class="${service.icon}"></i></div>
-                    <h3>${service.name}</h3>
-                    <p>${service.description}</p>
-                    <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
-                        <button class="btn btn-primary" onclick="editService(${service.id})">Edit</button>
-                        <button class="btn btn-danger" onclick="deleteService(${service.id})">Delete</button>
-                    </div>
-                </div>
-            `).join('')}
-        </div>
-    `;
-    updatePublicServices();
-}
-
-function updatePublicServices() {
-    const servicesGrids = document.querySelectorAll('.services-grid');
-    servicesGrids.forEach(grid => {
-        if (grid.id !== 'servicesList') {
-            const services = JSON.parse(localStorage.getItem('absta_services') || '[]');
-            grid.innerHTML = services.map(service => `
-                <div class="service-card">
-                    <div class="service-icon"><i class="${service.icon}"></i></div>
-                    <h3>${service.name}</h3>
-                    <p>${service.description}</p>
-                </div>
-            `).join('');
-        }
-    });
-}
-
-function openServiceModal(serviceId = null) {
-    const modal = document.getElementById('serviceModal');
-    const deleteBtn = document.getElementById('deleteServiceBtn');
-    
-    if (serviceId) {
-        editingServiceId = serviceId;
-        const services = JSON.parse(localStorage.getItem('absta_services') || '[]');
-        const service = services.find(s => s.id == serviceId);
-        if (service) {
-            document.getElementById('modalServiceTitle').textContent = 'Edit Service';
-            document.getElementById('serviceId').value = service.id;
-            document.getElementById('serviceName').value = service.name;
-            document.getElementById('serviceIcon').value = service.icon;
-            document.getElementById('serviceDescription').value = service.description;
-            deleteBtn.style.display = 'inline-flex';
-        }
-    } else {
-        editingServiceId = null;
-        document.getElementById('modalServiceTitle').textContent = 'Add New Service';
-        document.getElementById('serviceForm').reset();
-        deleteBtn.style.display = 'none';
-    }
-    modal.classList.add('active');
-}
-
-function editService(id) { openServiceModal(id); }
-
-function deleteService(serviceId = null) {
-    if (!serviceId) serviceId = editingServiceId;
-    if (!serviceId) return;
-    if (confirm('Delete this service?')) {
-        let services = JSON.parse(localStorage.getItem('absta_services') || '[]');
-        services = services.filter(s => s.id != serviceId);
-        localStorage.setItem('absta_services', JSON.stringify(services));
-        loadServices();
-        closeModal('serviceModal');
-        alert('Service deleted!');
-    }
-}
-
-if (document.getElementById('serviceForm')) {
-    document.getElementById('serviceForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const service = {
-            id: editingServiceId || Date.now(),
-            name: document.getElementById('serviceName').value,
-            icon: document.getElementById('serviceIcon').value,
-            description: document.getElementById('serviceDescription').value
-        };
-        let services = JSON.parse(localStorage.getItem('absta_services') || '[]');
-        if (editingServiceId) {
-            services = services.map(s => s.id == editingServiceId ? service : s);
-        } else {
-            services.push(service);
-        }
-        localStorage.setItem('absta_services', JSON.stringify(services));
-        loadServices();
-        closeModal('serviceModal');
-        alert(`Service ${editingServiceId ? 'updated' : 'added'}!`);
-    });
-}
     </script>
 </body>
 </html>
