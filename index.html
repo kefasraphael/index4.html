@@ -2652,1869 +2652,743 @@
         </div>
     </div>
 
-    <!-- JavaScript -->
-    <script>
-        // ===== IMAGE LIGHTBOX =====
-let currentImageIndex = 0;
-let currentImageArray = [];
-
-function initLightbox() {
-    const modal = document.getElementById('imageModal');
-    const modalImg = document.getElementById('modalImage');
-    const captionText = document.getElementById('modalCaption');
-    const closeBtn = document.querySelector('.image-modal-close');
-    const prevBtn = document.getElementById('prevImageBtn');
-    const nextBtn = document.getElementById('nextImageBtn');
-
-    // Close modal
-    if (closeBtn) {
-        closeBtn.addEventListener('click', () => {
-            modal.style.display = 'none';
-        });
-    }
-
-    // Navigate images
-    if (prevBtn) {
-        prevBtn.addEventListener('click', () => {
-            if (currentImageArray.length > 0) {
-                currentImageIndex = (currentImageIndex - 1 + currentImageArray.length) % currentImageArray.length;
-                modalImg.src = currentImageArray[currentImageIndex].src;
-                captionText.innerHTML = currentImageArray[currentImageIndex].caption;
-            }
-        });
-    }
-
-    if (nextBtn) {
-        nextBtn.addEventListener('click', () => {
-            if (currentImageArray.length > 0) {
-                currentImageIndex = (currentImageIndex + 1) % currentImageArray.length;
-                modalImg.src = currentImageArray[currentImageIndex].src;
-                captionText.innerHTML = currentImageArray[currentImageIndex].caption;
-            }
-        });
-    }
-
-    // Click outside to close
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            modal.style.display = 'none';
-        }
-    });
-
-    // Keyboard navigation
-    document.addEventListener('keydown', (e) => {
-        if (modal.style.display === 'block') {
-            if (e.key === 'Escape') {
-                modal.style.display = 'none';
-            } else if (e.key === 'ArrowLeft') {
-                prevBtn.click();
-            } else if (e.key === 'ArrowRight') {
-                nextBtn.click();
-            }
-        }
-    });
-}
-
-// Function to open lightbox
-function openLightbox(element) {
-    const modal = document.getElementById('imageModal');
-    const modalImg = document.getElementById('modalImage');
-    const captionText = document.getElementById('modalCaption');
-
-    // Get all images from the same page/context
-    const allImages = [];
     
-    if (element.closest('.portfolio-grid')) {
-        // If from portfolio
-        document.querySelectorAll('.portfolio-image img').forEach((img, index) => {
-            allImages.push({
-                src: img.src,
-                caption: img.alt || 'Portfolio Image'
-            });
-            if (img === element) currentImageIndex = index;
-        });
-    } else if (element.closest('.team-grid')) {
-        // If from team
-        document.querySelectorAll('.team-image img').forEach((img, index) => {
-            allImages.push({
-                src: img.src,
-                caption: img.alt || 'Team Member'
-            });
-            if (img === element) currentImageIndex = index;
-        });
-    } else {
-        // Single image
-        allImages.push({
-            src: element.src,
-            caption: element.alt || 'Image'
-        });
-        currentImageIndex = 0;
-    }
 
-    currentImageArray = allImages;
-
-    modal.style.display = 'block';
-    modalImg.src = element.src;
-    captionText.innerHTML = element.alt || 'Image';
-}
-
-// Add click event to all images
-function addImageClickListeners() {
-    // Portfolio images
-    document.querySelectorAll('.portfolio-image img').forEach(img => {
-        img.addEventListener('click', function(e) {
-            e.stopPropagation();
-            openLightbox(this);
-        });
-    });
-
-    // Team images
-    document.querySelectorAll('.team-image img').forEach(img => {
-        img.addEventListener('click', function(e) {
-            e.stopPropagation();
-            openLightbox(this);
-        });
-    });
-}
-
-// Call this after loading content dynamically
-function refreshImageListeners() {
-    addImageClickListeners();
-}
-
-// Modify your existing load functions to call refreshImageListeners
-const originalLoadHomePage = loadHomePage;
-loadHomePage = function() {
-    originalLoadHomePage();
-    setTimeout(refreshImageListeners, 100);
-};
-
-const originalLoadPortfolioPage = loadPortfolioPage;
-loadPortfolioPage = function() {
-    originalLoadPortfolioPage();
-    setTimeout(refreshImageListeners, 100);
-};
-
-const originalLoadAboutPage = loadAboutPage;
-loadAboutPage = function() {
-    originalLoadAboutPage();
-    setTimeout(refreshImageListeners, 100);
-};
-
-// Initialize lightbox on DOM load
-document.addEventListener('DOMContentLoaded', function() {
-    // ... existing code ...
-    initLightbox();
-    setTimeout(refreshImageListeners, 500);
-});
-        // ===== GLOBAL VARIABLES =====
-        let currentUser = null;
-        let editingProjectId = null;
-        let editingTeamId = null;
-        let viewingMessageId = null;
+    <!-- JavaScript -->
+<script>
+    // ===== GLOBAL VARIABLES =====
+    let currentUser = null;
+    let editingProjectId = null;
+    let editingTeamId = null;
+    let viewingMessageId = null;
+    let isFirebaseInitialized = false;
+    let database = null;
+    let isDataLoaded = false; // Prevent multiple loads
+    
+    // ===== FIREBASE CONFIGURATION =====
+    const firebaseConfig = {
+        apiKey: "AIzaSyAoBDaxlmdHZNibOPo39lUk-LzNl3VFMnY",
+        authDomain: "absta-creatives.firebaseapp.com",
+        databaseURL: "https://absta-creatives-default-rtdb.firebaseio.com",
+        projectId: "absta-creatives",
+        storageBucket: "absta-creatives.firebasestorage.app",
+        messagingSenderId: "1057402336705",
+        appId: "1:1057402336705:web:257880680e9eba1582eb40"
+    };
+    
+    // ===== FIREBASE INITIALIZATION (ONCE ONLY) =====
+    function initFirebase() {
+        if (isFirebaseInitialized) return true;
         
-        // ===== FIREBASE CONFIGURATION - WEKA HAPA CONFIG ZAKO =====
-        const firebaseConfig = {
-            apiKey: "AIzaSyAoBDaxlmdHZNibOPo39lUk-LzNl3VFMnY",
-            authDomain: "absta-creatives.firebaseapp.com",
-            databaseURL: "https://absta-creatives-default-rtdb.firebaseio.com",
-            projectId: "absta-creatives",
-            storageBucket: "absta-creatives.firebasestorage.app",
-            messagingSenderId: "1057402336705",
-            appId: "1:1057402336705:web:257880680e9eba1582eb40"
-        };
-        
-        // Initialize Firebase
-        let database;
-        let isFirebaseInitialized = false;
-
-        // ===== FIREBASE INITIALIZATION =====
-        function initFirebase() {
-            try {
-                // Check if Firebase is already initialized
-                if (typeof firebase === 'undefined') {
-                    console.error("Firebase SDK not loaded");
-                    showSyncStatus('error', 'Firebase SDK not loaded');
-                    return false;
-                }
-                
-                // Check if Firebase config is valid
-                if (!firebaseConfig.apiKey || firebaseConfig.apiKey === "YOUR_API_KEY") {
-                    console.warn("Firebase not configured. Using localStorage only.");
-                    showSyncStatus('local', 'Using local storage only');
-                    return false;
-                }
-                
-                // Initialize Firebase
-                firebase.initializeApp(firebaseConfig);
-                database = firebase.database();
-                isFirebaseInitialized = true;
-                
-                // Test connection
-                database.ref('.info/connected').on('value', (snap) => {
-                    if (snap.val() === true) {
-                        console.log("Firebase connected successfully");
-                        showSyncStatus('success', 'Connected to cloud');
-                        
-                        // Start listening for changes
-                        listenForChanges();
-                        
-                        // Load data from Firebase
-                        loadFromFirebase();
-                    
-                    // 🔥 ONGEZA MISTARI HII 3 HAPA CHINI 🔥
-                // Pakia logo mara moja baada ya kuconnect
-                setTimeout(function() {
-                    loadLogoFromFirebase();
-                }, 500);
-            }
-        });
-        
-        return true;
-    } catch (error) {
-        console.error("Firebase initialization error:", error);
-        showSyncStatus('error', 'Sync unavailable');
-        return false;
-    }
-}
-                
-                
-                return true;
-            } catch (error) {
-                console.error("Firebase initialization error:", error);
-                showSyncStatus('error', 'Sync unavailable');
+        try {
+            if (typeof firebase === 'undefined') {
+                console.warn("Firebase SDK not loaded");
                 return false;
             }
+            
+            // Check if already initialized
+            if (firebase.apps.length === 0) {
+                firebase.initializeApp(firebaseConfig);
+            }
+            
+            database = firebase.database();
+            isFirebaseInitialized = true;
+            console.log("✅ Firebase initialized once");
+            
+            // Setup listeners after initialization
+            setupFirebaseListeners();
+            return true;
+        } catch (error) {
+            console.error("Firebase init error:", error);
+            return false;
         }
-
-        // ===== SYNC STATUS =====
-        function showSyncStatus(type, message) {
-            const syncStatus = document.getElementById('syncStatus');
-            if (!syncStatus) return;
+    }
+    
+    // ===== FIREBASE LISTENERS (ONLY ONCE) =====
+    let listenersSetup = false;
+    
+    function setupFirebaseListeners() {
+        if (listenersSetup || !database) return;
+        listenersSetup = true;
+        
+        // Test connection only once
+        database.ref('.info/connected').once('value', (snap) => {
+            if (snap.val() === true) {
+                console.log("Firebase connected");
+                loadAllDataFromFirebase();
+            }
+        });
+        
+        // Listen for changes
+        database.ref('projects').on('value', (snapshot) => {
+            const projects = snapshot.val();
+            if (projects) {
+                localStorage.setItem('absta_projects', JSON.stringify(Object.values(projects)));
+                refreshCurrentPage();
+            }
+        });
+        
+        database.ref('team').on('value', (snapshot) => {
+            const team = snapshot.val();
+            if (team) {
+                localStorage.setItem('absta_team', JSON.stringify(Object.values(team)));
+                refreshCurrentPage();
+            }
+        });
+        
+        database.ref('settings').on('value', (snapshot) => {
+            const settings = snapshot.val();
+            if (settings) {
+                localStorage.setItem('absta_settings', JSON.stringify(settings));
+                refreshCurrentPage();
+            }
+        });
+    }
+    
+    // ===== LOAD ALL DATA FROM FIREBASE ONCE =====
+    function loadAllDataFromFirebase() {
+        if (!database) return;
+        
+        Promise.all([
+            database.ref('projects').once('value'),
+            database.ref('team').once('value'),
+            database.ref('settings').once('value')
+        ]).then(([projectsSnap, teamSnap, settingsSnap]) => {
+            if (projectsSnap.exists()) {
+                localStorage.setItem('absta_projects', JSON.stringify(Object.values(projectsSnap.val())));
+            }
+            if (teamSnap.exists()) {
+                localStorage.setItem('absta_team', JSON.stringify(Object.values(teamSnap.val())));
+            }
+            if (settingsSnap.exists()) {
+                localStorage.setItem('absta_settings', JSON.stringify(settingsSnap.val()));
+            }
             
-            const icon = syncStatus.querySelector('i');
-            const span = syncStatus.querySelector('span');
+            // Load logo separately
+            loadLogoFromFirebase();
             
-            syncStatus.classList.add('active');
-            
-            if (type === 'syncing') {
-                icon.className = 'fas fa-sync-alt';
-                span.textContent = message || 'Syncing...';
-            } else if (type === 'success') {
-                icon.className = 'fas fa-check-circle';
-                span.textContent = message || 'Synced';
-                
+            // Refresh current page
+            refreshCurrentPage();
+        }).catch(error => {
+            console.error("Error loading from Firebase:", error);
+            refreshCurrentPage();
+        });
+    }
+    
+    // ===== REFRESH CURRENT PAGE ONLY =====
+    function refreshCurrentPage() {
+        const activePage = document.querySelector('.page.active')?.id;
+        
+        switch(activePage) {
+            case 'home-page':
+                loadHomePage();
+                break;
+            case 'portfolio-page':
+                loadPortfolioPage();
+                break;
+            case 'about-page':
+                loadAboutPage();
+                break;
+            case 'admin-page':
+                if (currentUser) loadAdminDashboard();
+                break;
+        }
+        
+        // Always update footer and stats
+        loadFooterData();
+        updateStats();
+    }
+    
+    // ===== SYNC TO FIREBASE =====
+    function syncToFirebase(type, data) {
+        if (!database) return;
+        
+        const updates = {};
+        updates[type] = data;
+        
+        database.ref().update(updates)
+            .then(() => console.log(`${type} synced`))
+            .catch(error => console.error(`Error syncing ${type}:`, error));
+    }
+    
+    // ===== INITIALIZATION (ONCE) =====
+    let isInitialized = false;
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        if (isInitialized) return;
+        isInitialized = true;
+        
+        // Remove loader
+        setTimeout(() => {
+            const loader = document.getElementById('loader');
+            if (loader) {
+                loader.style.opacity = '0';
                 setTimeout(() => {
-                    syncStatus.classList.remove('active');
-                }, 2000);
-            } else if (type === 'error') {
-                icon.className = 'fas fa-exclamation-circle';
-                span.textContent = message || 'Sync failed';
-            } else if (type === 'local') {
-                icon.className = 'fas fa-database';
-                span.textContent = message || 'Using local storage';
-            }
-        }
-
-        // ===== LISTEN FOR CHANGES =====
-        function listenForChanges() {
-            if (!isFirebaseInitialized || !database) return;
-            
-            // Listen for projects changes
-            database.ref('projects').on('value', (snapshot) => {
-                const projects = snapshot.val();
-                if (projects) {
-                    const projectsArray = Object.values(projects);
-                    localStorage.setItem('absta_projects', JSON.stringify(projectsArray));
-                    updateUIAfterSync();
-                    showSyncStatus('success', 'Projects updated');
-                }
-            });
-            
-            // Listen for team changes
-            database.ref('team').on('value', (snapshot) => {
-                const team = snapshot.val();
-                if (team) {
-                    const teamArray = Object.values(team);
-                    localStorage.setItem('absta_team', JSON.stringify(teamArray));
-                    updateUIAfterSync();
-                    showSyncStatus('success', 'Team updated');
-                }
-            });
-            
-            // Listen for settings changes
-            database.ref('settings').on('value', (snapshot) => {
-                const settings = snapshot.val();
-                if (settings) {
-                    localStorage.setItem('absta_settings', JSON.stringify(settings));
-                    updateUIAfterSync();
-                    showSyncStatus('success', 'Settings updated');
-                }
-            });
-            
-            // Listen for messages changes
-            database.ref('messages').on('value', (snapshot) => {
-                const messages = snapshot.val();
-                if (messages) {
-                    const messagesArray = Object.values(messages);
-                    localStorage.setItem('absta_messages', JSON.stringify(messagesArray));
-                    
-                    if (document.getElementById('messages-section')?.classList.contains('active')) {
-                        loadAdminMessages();
-                    }
-                }
-            });
-        }
-
-        function updateUIAfterSync() {
-            const activePage = document.querySelector('.page.active')?.id;
-            
-            if (!activePage) return;
-            
-            switch(activePage) {
-                case 'home-page':
-                    loadHomePage();
-                    break;
-                case 'portfolio-page':
-                    loadPortfolioPage();
-                    break;
-                case 'about-page':
-                    loadAboutPage();
-                    break;
-                case 'admin-page':
-                    loadAdminDashboard();
-                    break;
-            }
-        }
-
-        // ===== SYNC TO FIREBASE =====
-        function syncToFirebase(type, data) {
-            if (!isFirebaseInitialized || !database) {
-                console.log("Firebase not initialized, saving locally only");
-                return;
-            }
-            
-            showSyncStatus('syncing', 'Syncing...');
-            
-            const updates = {};
-            updates[type] = data;
-            
-            database.ref().update(updates)
-                .then(() => {
-                    console.log(`${type} synced successfully`);
-                    showSyncStatus('success', 'Synced');
-                })
-                .catch((error) => {
-                    console.error(`Error syncing ${type}:`, error);
-                    showSyncStatus('error', 'Sync failed');
-                });
-        }
-
-        // ===== INITIALIZATION =====
-        document.addEventListener('DOMContentLoaded', function() {
-            // Remove loader
-            setTimeout(() => {
-                document.getElementById('loader').style.opacity = '0';
-                setTimeout(() => {
-                    document.getElementById('loader').style.display = 'none';
+                    loader.style.display = 'none';
                 }, 500);
-            }, 1000);
-
-            // Initialize navigation
-            initNavigation();
-            
-            // Initialize default data
-            initData();
-            
-            // Try to initialize Firebase
-            initFirebase();
-            
-            // Load home page
-            loadHomePage();
-            
-            // Update year
-            updateCurrentYear();
-            
-            // Check login status
-            checkLoginStatus();
-        });
-
-        function loadFromFirebase() {
-            if (!isFirebaseInitialized || !database) {
-                loadHomePage();
-                return;
             }
-            
-            showSyncStatus('syncing', 'Loading data...');
-            
-            // Load all data from Firebase
-            Promise.all([
-                database.ref('projects').once('value'),
-                database.ref('team').once('value'),
-                database.ref('settings').once('value'),
-                database.ref('messages').once('value')
-            ]).then(([projectsSnap, teamSnap, settingsSnap, messagesSnap]) => {
-                if (projectsSnap.exists()) {
-                    localStorage.setItem('absta_projects', JSON.stringify(Object.values(projectsSnap.val())));
-                }
-                
-                if (teamSnap.exists()) {
-                    localStorage.setItem('absta_team', JSON.stringify(Object.values(teamSnap.val())));
-                }
-                
-                if (settingsSnap.exists()) {
-                    localStorage.setItem('absta_settings', JSON.stringify(settingsSnap.val()));
-                }
-                
-                if (messagesSnap.exists()) {
-                    localStorage.setItem('absta_messages', JSON.stringify(Object.values(messagesSnap.val())));
-                }
-                
-                loadHomePage();
-                showSyncStatus('success', 'Data loaded');
-            }).catch(error => {
-                console.error("Error loading from Firebase:", error);
-                loadHomePage();
-                showSyncStatus('error', 'Using local data');
-            });
-        }
-
-        // ===== NAVIGATION =====
-        function initNavigation() {
-            const mobileToggle = document.getElementById('mobileToggle');
-            const navLinks = document.getElementById('navLinks');
-            
-            if (mobileToggle) {
-                mobileToggle.addEventListener('click', function() {
-                    navLinks.classList.toggle('active');
-                });
-            }
-            
-            document.querySelectorAll('.nav-link').forEach(link => {
-                link.addEventListener('click', () => {
-                    navLinks.classList.remove('active');
-                });
-            });
-        }
-
-        function navigateTo(page) {
-            document.querySelectorAll('.page').forEach(p => {
-                p.classList.remove('active');
-            });
-            
-            document.querySelectorAll('.nav-link').forEach(link => {
-                link.classList.remove('active');
-            });
-            
-            const pageElement = document.getElementById(`${page}-page`);
-            if (pageElement) {
-                pageElement.classList.add('active');
-                
-                const navLink = document.querySelector(`.nav-link[onclick*="${page}"]`);
-                if (navLink) {
-                    navLink.classList.add('active');
-                }
-                
-                switch(page) {
-                    case 'home':
-                        loadHomePage();
-                        break;
-                    case 'portfolio':
-                        loadPortfolioPage();
-                        break;
-                    case 'about':
-                        loadAboutPage();
-                        break;
-                    case 'contact':
-                        loadContactPage();
-                        break;
-                    case 'admin':
-                        checkAdminAccess();
-                        break;
-                }
-                
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
-        }
-
-        // ===== DATA MANAGEMENT =====
-        function initData() {
-            if (!localStorage.getItem('absta_projects')) {
-                const defaultProjects = [
-                    {
-                        id: 1,
-                        title: 'Ocean Dreams - Zanzibar Wedding',
-                        description: 'A breathtaking wedding film shot on the pristine beaches of Zanzibar.',
-                        category: 'wedding',
-                        image: 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-                        date: '2024-01-15'
-                    },
-                    {
-                        id: 2,
-                        title: 'Urban Pulse - Music Video',
-                        description: 'High-energy music video for emerging Tanzanian artist.',
-                        category: 'music',
-                        image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-                        date: '2024-02-20'
-                    },
-                    {
-                        id: 3,
-                        title: 'Serengeti Stories - Documentary',
-                        description: 'Wildlife documentary showcasing migration patterns in Serengeti.',
-                        category: 'documentary',
-                        image: 'https://images.unsplash.com/photo-1518837695005-2083093ee35b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-                        date: '2024-03-10'
-                    }
-                ];
-                localStorage.setItem('absta_projects', JSON.stringify(defaultProjects));
-            }
-            
-            if (!localStorage.getItem('absta_team')) {
-                const defaultTeam = [
-                    {
-                        id: 1,
-                        name: 'Alexander Benson',
-                        role: 'Founder & Creative Director',
-                        email: 'alex@abstacreatives.com',
-                        bio: 'With over 12 years in visual storytelling, Alexander leads our creative vision.',
-                        image: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80'
-                    },
-                    {
-                        id: 2,
-                        name: 'Sarah Johnson',
-                        role: 'Lead Cinematographer',
-                        email: 'sarah@abstacreatives.com',
-                        bio: 'Specializes in cinematic storytelling and creative direction.',
-                        image: 'https://images.unsplash.com/photo-1494790108755-2616b786d4d9?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80'
-                    },
-                    {
-                        id: 3,
-                        name: 'Michael Chen',
-                        role: 'Video Editor & Colorist',
-                        email: 'michael@abstacreatives.com',
-                        bio: 'Expert in post-production with a keen eye for detail and color grading.',
-                        image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80'
-                    }
-                ];
-                localStorage.setItem('absta_team', JSON.stringify(defaultTeam));
-            }
-            
-            if (!localStorage.getItem('absta_messages')) {
-                localStorage.setItem('absta_messages', JSON.stringify([]));
-            }
-            
-            if (!localStorage.getItem('absta_settings')) {
-                const defaultSettings = {
-                    companyName: 'ABSTA CREATIVES',
-                    companyEmail: 'info@abstacreatives.com',
-                    companyPhone: '+255 784 123 456',
-                    companyAddress: 'Dar es Salaam, Tanzania',
-                    companyAbout: 'We create visual stories that captivate, inspire, and leave lasting impressions.',
-                    social: {
-                        instagram: 'https://instagram.com/abstacreatives',
-                        facebook: 'https://facebook.com/abstacreatives',
-                        twitter: 'https://twitter.com/abstacreatives',
-                        youtube: 'https://youtube.com/abstacreatives'
-                    }
-                };
-                localStorage.setItem('absta_settings', JSON.stringify(defaultSettings));
-            }
-            
-            if (!localStorage.getItem('absta_admin')) {
-                const adminUser = {
-                    username: 'admin',
-                    password: 'password123'
-                };
-                localStorage.setItem('absta_admin', JSON.stringify(adminUser));
-            }
-        }
-
-        // ===== FILE UPLOAD HANDLER =====
-        function handleImageUpload(input, previewId, hiddenInputId) {
-            const file = input.files[0];
-            if (!file) return;
-            
-            if (file.size > 5 * 1024 * 1024) {
-                alert('File is too large! Maximum size is 5MB.');
-                return;
-            }
-            
-            const fileNameElement = document.getElementById(input.id.replace('Upload', 'FileName'));
-            if (fileNameElement) {
-                fileNameElement.textContent = `Selected: ${file.name}`;
-            }
-            
-            const buttonText = document.getElementById(input.id.replace('Upload', 'UploadButtonText'));
-            if (buttonText) {
-                buttonText.textContent = 'Change Image';
-            }
-            
-            const reader = new FileReader();
-            
-            reader.onload = function(e) {
-                const preview = document.getElementById(previewId);
-                const previewImg = preview.querySelector('img');
-                previewImg.src = e.target.result;
-                preview.classList.add('active');
-                
-                document.getElementById(hiddenInputId).value = e.target.result;
-            };
-            
-            reader.readAsDataURL(file);
-        }
-
-        // ===== HOME PAGE =====
-        function loadHomePage() {
-            loadFeaturedProjects();
-            updateStats();
-            loadFooterData();
-        }
-
-        function loadFeaturedProjects() {
-            const projectsGrid = document.getElementById('featuredProjects');
-            if (!projectsGrid) return;
-            
-            const projects = JSON.parse(localStorage.getItem('absta_projects') || '[]');
-            const featured = projects.slice(0, 3);
-            
-            if (featured.length === 0) {
-                projectsGrid.innerHTML = `
-                    <div style="grid-column: 1 / -1; text-align: center; padding: 60px; color: var(--absta-gray);">
-                        <i class="fas fa-video-slash" style="font-size: 3rem; margin-bottom: 20px;"></i>
-                        <h3>No Projects Yet</h3>
-                        <p>Check back soon for our latest work</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            projectsGrid.innerHTML = featured.map(project => `
-                <div class="portfolio-item" data-category="${project.category}">
-                    <div class="portfolio-image">
-                        <img src="${project.image}" alt="${project.title}" loading="lazy">
-                    </div>
-                    <div class="portfolio-content">
-                        <span class="portfolio-category">${project.category}</span>
-                        <h3 class="portfolio-title">${project.title}</h3>
-                        <p class="portfolio-description">${project.description}</p>
-                        <div class="portfolio-meta">
-                            <div class="portfolio-date">
-                                <i class="far fa-calendar"></i>
-                                <span>${new Date(project.date).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function updateStats() {
-            const projects = JSON.parse(localStorage.getItem('absta_projects') || '[]');
-            const projectsCount = document.getElementById('projectsCount');
-            if (projectsCount) {
-                projectsCount.textContent = projects.length;
-            }
-        }
-
-        // ===== PORTFOLIO PAGE =====
-        function loadPortfolioPage() {
-            loadAllProjects();
-            initPortfolioTabs();
-        }
-
-        function loadAllProjects() {
-            const portfolioGrid = document.getElementById('portfolioGrid');
-            if (!portfolioGrid) return;
-            
-            const projects = JSON.parse(localStorage.getItem('absta_projects') || '[]');
-            
-            if (projects.length === 0) {
-                portfolioGrid.innerHTML = `
-                    <div style="grid-column: 1 / -1; text-align: center; padding: 60px; color: var(--absta-gray);">
-                        <i class="fas fa-video-slash" style="font-size: 3rem; margin-bottom: 20px;"></i>
-                        <h3>No Projects Yet</h3>
-                        <p>Our portfolio is being updated with amazing projects</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            portfolioGrid.innerHTML = projects.map(project => `
-                <div class="portfolio-item" data-category="${project.category}">
-                    <div class="portfolio-image">
-                        <img src="${project.image}" alt="${project.title}" loading="lazy">
-                    </div>
-                    <div class="portfolio-content">
-                        <span class="portfolio-category">${project.category}</span>
-                        <h3 class="portfolio-title">${project.title}</h3>
-                        <p class="portfolio-description">${project.description}</p>
-                        <div class="portfolio-meta">
-                            <div class="portfolio-date">
-                                <i class="far fa-calendar"></i>
-                                <span>${new Date(project.date).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function initPortfolioTabs() {
-            const tabs = document.querySelectorAll('#portfolioTabs .admin-tab');
-            tabs.forEach(tab => {
-                tab.addEventListener('click', function() {
-                    tabs.forEach(t => t.classList.remove('active'));
-                    this.classList.add('active');
-                    
-                    const filter = this.getAttribute('data-filter');
-                    filterPortfolioProjects(filter);
-                });
-            });
-        }
-
-        function filterPortfolioProjects(filter) {
-            const projects = document.querySelectorAll('#portfolioGrid .portfolio-item');
-            
-            projects.forEach(project => {
-                if (filter === 'all' || project.getAttribute('data-category') === filter) {
-                    project.style.display = 'block';
-                    setTimeout(() => {
-                        project.style.opacity = '1';
-                        project.style.transform = 'translateY(0)';
-                    }, 10);
-                } else {
-                    project.style.opacity = '0';
-                    project.style.transform = 'translateY(20px)';
-                    setTimeout(() => {
-                        project.style.display = 'none';
-                    }, 300);
-                }
-            });
-        }
-
-        // ===== ABOUT PAGE =====
-        function loadAboutPage() {
-            loadTeamMembers();
-        }
-
-        function loadTeamMembers() {
-            const teamGrid = document.getElementById('teamGrid');
-            if (!teamGrid) return;
-            
-            const team = JSON.parse(localStorage.getItem('absta_team') || '[]');
-            
-            if (team.length === 0) {
-                teamGrid.innerHTML = `
-                    <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--absta-gray);">
-                        <i class="fas fa-users" style="font-size: 3rem; margin-bottom: 20px;"></i>
-                        <h3>Team Information Coming Soon</h3>
-                    </div>
-                `;
-                return;
-            }
-            
-            teamGrid.innerHTML = team.map(member => `
-                <div class="team-card">
-                    <div class="team-image">
-                        <img src="${member.image}" alt="${member.name}" loading="lazy">
-                    </div>
-                    <div class="team-info">
-                        <h3>${member.name}</h3>
-                        <div class="team-role">${member.role}</div>
-                        <p class="team-bio">${member.bio}</p>
-                        <div class="social-links">
-                            <a href="mailto:${member.email}" title="Email">
-                                <i class="fas fa-envelope"></i>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        // ===== CONTACT PAGE =====
-        function loadContactPage() {
-            loadContactInfo();
-            initContactForm();
-        }
-
-        function loadContactInfo() {
-            const settings = JSON.parse(localStorage.getItem('absta_settings') || '{}');
-            
-            if (settings.companyAddress) {
-                const contactAddress = document.getElementById('contactAddress');
-                const footerAddress = document.getElementById('footerAddress');
-                if (contactAddress) contactAddress.textContent = settings.companyAddress;
-                if (footerAddress) footerAddress.textContent = settings.companyAddress;
-            }
-            
-            if (settings.companyPhone) {
-                const contactPhone = document.getElementById('contactPhone');
-                const footerPhone = document.getElementById('footerPhone');
-                if (contactPhone) contactPhone.textContent = settings.companyPhone;
-                if (footerPhone) footerPhone.textContent = settings.companyPhone;
-            }
-            
-            if (settings.companyEmail) {
-                const contactEmail = document.getElementById('contactEmail');
-                const footerEmail = document.getElementById('footerEmail');
-                if (contactEmail) contactEmail.textContent = settings.companyEmail;
-                if (footerEmail) footerEmail.textContent = settings.companyEmail;
-            }
-        }
-
-        function initContactForm() {
-            const contactForm = document.getElementById('contactForm');
-            if (contactForm) {
-                contactForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    
-                    const message = {
-                        id: Date.now(),
-                        name: document.getElementById('name').value,
-                        email: document.getElementById('email').value,
-                        subject: document.getElementById('subject').value,
-                        message: document.getElementById('message').value,
-                        date: new Date().toISOString(),
-                        read: false
-                    };
-                    
-                    const messages = JSON.parse(localStorage.getItem('absta_messages') || '[]');
-                    messages.unshift(message);
-                    localStorage.setItem('absta_messages', JSON.stringify(messages));
-                    
-                    if (isFirebaseInitialized) {
-                        const messagesObj = {};
-                        messages.forEach((msg, index) => {
-                            messagesObj[msg.id] = msg;
-                        });
-                        syncToFirebase('messages', messagesObj);
-                    }
-                    
-                    alert('Thank you for your message! We will get back to you soon.');
-                    contactForm.reset();
-                    updateAdminStats();
-                });
-            }
-        }
-
-        // ===== ADMIN PANEL =====
-        function checkAdminAccess() {
-            if (!currentUser) {
-                navigateTo('login');
-                return;
-            }
-            loadAdminDashboard();
-        }
-
-        function loadAdminDashboard() {
-            updateAdminStats();
-            loadAdminProjects();
-            loadAdminTeam();
-            loadAdminMessages();
-            loadAdminSettings();
-        }
-
-        function updateAdminStats() {
-            const projects = JSON.parse(localStorage.getItem('absta_projects') || '[]');
-            const team = JSON.parse(localStorage.getItem('absta_team') || '[]');
-            const messages = JSON.parse(localStorage.getItem('absta_messages') || '[]');
-            
-            const projectsCount = document.getElementById('adminProjectsCount');
-            const teamCount = document.getElementById('adminTeamCount');
-            const messagesCount = document.getElementById('adminMessagesCount');
-            
-            if (projectsCount) projectsCount.textContent = projects.length;
-            if (teamCount) teamCount.textContent = team.length;
-            if (messagesCount) messagesCount.textContent = messages.length;
-        }
-
-        function showAdminSection(section) {
-            document.querySelectorAll('.admin-section').forEach(sec => {
-                sec.classList.remove('active');
-            });
-            
-            document.querySelectorAll('#adminTabs .admin-tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            
-            const sectionElement = document.getElementById(`${section}-section`);
-            if (sectionElement) {
-                sectionElement.classList.add('active');
-            }
-            
-            const tabs = document.querySelectorAll('#adminTabs .admin-tab');
-            for (let i = 0; i < tabs.length - 1; i++) {
-                if (tabs[i].getAttribute('onclick')?.includes(section)) {
-                    tabs[i].classList.add('active');
-                    break;
-                }
-            }
-            
-            switch(section) {
-                case 'projects':
-                    loadAdminProjects();
-                    break;
-                case 'team':
-                    loadAdminTeam();
-                    break;
-                case 'messages':
-                    loadAdminMessages();
-                    break;
-                case 'settings':
-                    loadAdminSettings();
-                    break;
-            }
-        }
-
-        // ===== ADMIN PROJECTS =====
-        function loadAdminProjects() {
-            const tbody = document.getElementById('projectsTableBody');
-            if (!tbody) return;
-            
-            const projects = JSON.parse(localStorage.getItem('absta_projects') || '[]');
-            
-            if (projects.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="5" style="text-align: center; padding: 40px; color: var(--absta-gray);">
-                            <i class="fas fa-video-slash" style="font-size: 2rem; margin-bottom: 10px; display: block;"></i>
-                            <p>No projects added yet</p>
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-            
-            tbody.innerHTML = projects.map(project => `
-                <tr>
-                    <td style="color: white;">${project.title}</td>
-                    <td><span class="portfolio-category">${project.category}</span></td>
-                    <td>${new Date(project.date).toLocaleDateString()}</td>
-                    <td>
-                        <img src="${project.image}" alt="${project.title}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px;">
-                    </td>
-                    <td>
-                        <div class="table-actions">
-                            <button class="action-btn edit-btn" onclick="editProject(${project.id})">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="action-btn delete-btn" onclick="deleteProject(${project.id})">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function openProjectModal(projectId = null) {
-            const modal = document.getElementById('projectModal');
-            const form = document.getElementById('projectForm');
-            const deleteBtn = document.getElementById('deleteProjectBtn');
-            
-            document.getElementById('projectImagePreview')?.classList.remove('active');
-            document.getElementById('projectFileName').textContent = '';
-            document.getElementById('uploadButtonText').textContent = 'Choose Image from Device';
-            document.getElementById('projectImageData').value = '';
-            
-            if (projectId) {
-                editingProjectId = projectId;
-                const projects = JSON.parse(localStorage.getItem('absta_projects') || '[]');
-                const project = projects.find(p => p.id == projectId);
-                
-                if (project) {
-                    document.getElementById('modalProjectTitle').textContent = 'Edit Project';
-                    document.getElementById('projectId').value = project.id;
-                    document.getElementById('projectTitle').value = project.title;
-                    document.getElementById('projectCategory').value = project.category;
-                    document.getElementById('projectDescription').value = project.description;
-                    document.getElementById('projectDate').value = project.date;
-                    
-                    if (project.image) {
-                        const preview = document.getElementById('projectImagePreview');
-                        const previewImg = preview.querySelector('img');
-                        previewImg.src = project.image;
-                        preview.classList.add('active');
-                        document.getElementById('projectImageData').value = project.image;
-                        document.getElementById('uploadButtonText').textContent = 'Change Image';
-                    }
-                    
-                    deleteBtn.style.display = 'inline-flex';
-                }
-            } else {
-                editingProjectId = null;
-                document.getElementById('modalProjectTitle').textContent = 'Add New Project';
-                form.reset();
-                document.getElementById('projectDate').value = new Date().toISOString().split('T')[0];
-                deleteBtn.style.display = 'none';
-            }
-            
-            modal.classList.add('active');
-        }
-
-        document.getElementById('projectForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            let imageData = document.getElementById('projectImageData').value;
-            
-            if (!imageData) {
-                const category = document.getElementById('projectCategory').value;
-                imageData = getDefaultImage(category);
-            }
-            
-            const project = {
-                id: editingProjectId || Date.now(),
-                title: document.getElementById('projectTitle').value,
-                category: document.getElementById('projectCategory').value,
-                description: document.getElementById('projectDescription').value,
-                image: imageData,
-                date: document.getElementById('projectDate').value
-            };
-            
-            let projects = JSON.parse(localStorage.getItem('absta_projects') || '[]');
-            
-            if (editingProjectId) {
-                projects = projects.map(p => p.id == editingProjectId ? project : p);
-            } else {
-                projects.unshift(project);
-            }
-            
-            localStorage.setItem('absta_projects', JSON.stringify(projects));
-            
-            if (isFirebaseInitialized) {
-                const projectsObj = {};
-                projects.forEach((proj, index) => {
-                    projectsObj[proj.id] = proj;
-                });
-                syncToFirebase('projects', projectsObj);
-            }
-            
-            loadAdminProjects();
-            loadAllProjects();
-            loadFeaturedProjects();
-            updateAdminStats();
-            updateStats();
-            
-            closeModal('projectModal');
-            alert(`Project ${editingProjectId ? 'updated' : 'added'} successfully!`);
-        });
-
-        function deleteProject(projectId = null) {
-            if (!projectId) projectId = editingProjectId;
-            if (!projectId) return;
-            
-            if (confirm('Are you sure you want to delete this project?')) {
-                let projects = JSON.parse(localStorage.getItem('absta_projects') || '[]');
-                projects = projects.filter(p => p.id != projectId);
-                localStorage.setItem('absta_projects', JSON.stringify(projects));
-                
-                if (isFirebaseInitialized) {
-                    const projectsObj = {};
-                    projects.forEach((proj, index) => {
-                        projectsObj[proj.id] = proj;
-                    });
-                    syncToFirebase('projects', projectsObj);
-                }
-                
-                loadAdminProjects();
-                loadAllProjects();
-                loadFeaturedProjects();
-                updateAdminStats();
-                updateStats();
-                
-                closeModal('projectModal');
-                alert('Project deleted successfully!');
-            }
-        }
-
-        function getDefaultImage(category) {
-            const images = {
-                wedding: 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-                commercial: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-                music: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-                documentary: 'https://images.unsplash.com/photo-1518837695005-2083093ee35b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-                photography: 'https://images.unsplash.com/photo-1523398002811-999ca8dec234?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
-            };
-            return images[category] || 'https://images.unsplash.com/photo-1611224923853-80b023f02d71?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
-        }
-
-        // ===== ADMIN TEAM =====
-        function loadAdminTeam() {
-            const tbody = document.getElementById('teamTableBody');
-            if (!tbody) return;
-            
-            const team = JSON.parse(localStorage.getItem('absta_team') || '[]');
-            
-            if (team.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="5" style="text-align: center; padding: 40px; color: var(--absta-gray);">
-                            <i class="fas fa-users" style="font-size: 2rem; margin-bottom: 10px; display: block;"></i>
-                            <p>No team members added yet</p>
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-            
-            tbody.innerHTML = team.map(member => `
-                <tr>
-                    <td style="color: white;">${member.name}</td>
-                    <td>${member.role}</td>
-                    <td>${member.email}</td>
-                    <td>
-                        <img src="${member.image}" alt="${member.name}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px;">
-                    </td>
-                    <td>
-                        <div class="table-actions">
-                            <button class="action-btn edit-btn" onclick="editTeamMember(${member.id})">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="action-btn delete-btn" onclick="deleteTeamMember(${member.id})">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function openTeamModal(memberId = null) {
-            const modal = document.getElementById('teamModal');
-            const form = document.getElementById('teamForm');
-            const deleteBtn = document.getElementById('deleteTeamBtn');
-            
-            document.getElementById('teamImagePreview')?.classList.remove('active');
-            document.getElementById('teamFileName').textContent = '';
-            document.getElementById('teamUploadButtonText').textContent = 'Choose Image from Device';
-            document.getElementById('teamImageData').value = '';
-            
-            if (memberId) {
-                editingTeamId = memberId;
-                const team = JSON.parse(localStorage.getItem('absta_team') || '[]');
-                const member = team.find(m => m.id == memberId);
-                
-                if (member) {
-                    document.getElementById('modalTeamTitle').textContent = 'Edit Team Member';
-                    document.getElementById('teamId').value = member.id;
-                    document.getElementById('teamName').value = member.name;
-                    document.getElementById('teamRole').value = member.role;
-                    document.getElementById('teamEmail').value = member.email || '';
-                    document.getElementById('teamBio').value = member.bio;
-                    
-                    if (member.image) {
-                        const preview = document.getElementById('teamImagePreview');
-                        const previewImg = preview.querySelector('img');
-                        previewImg.src = member.image;
-                        preview.classList.add('active');
-                        document.getElementById('teamImageData').value = member.image;
-                        document.getElementById('teamUploadButtonText').textContent = 'Change Image';
-                    }
-                    
-                    deleteBtn.style.display = 'inline-flex';
-                }
-            } else {
-                editingTeamId = null;
-                document.getElementById('modalTeamTitle').textContent = 'Add Team Member';
-                form.reset();
-                deleteBtn.style.display = 'none';
-            }
-            
-            modal.classList.add('active');
-        }
-
-        document.getElementById('teamForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            let imageData = document.getElementById('teamImageData').value;
-            
-            if (!imageData) {
-                imageData = 'https://images.unsplash.com/photo-1494790108755-2616b786d4d9?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80';
-            }
-            
-            const member = {
-                id: editingTeamId || Date.now(),
-                name: document.getElementById('teamName').value,
-                role: document.getElementById('teamRole').value,
-                email: document.getElementById('teamEmail').value,
-                image: imageData,
-                bio: document.getElementById('teamBio').value
-            };
-            
-            let team = JSON.parse(localStorage.getItem('absta_team') || '[]');
-            
-            if (editingTeamId) {
-                team = team.map(m => m.id == editingTeamId ? member : m);
-            } else {
-                team.unshift(member);
-            }
-            
-            localStorage.setItem('absta_team', JSON.stringify(team));
-            
-            if (isFirebaseInitialized) {
-                const teamObj = {};
-                team.forEach((mem, index) => {
-                    teamObj[mem.id] = mem;
-                });
-                syncToFirebase('team', teamObj);
-            }
-            
-            loadAdminTeam();
-            loadTeamMembers();
-            updateAdminStats();
-            
-            closeModal('teamModal');
-            alert(`Team member ${editingTeamId ? 'updated' : 'added'} successfully!`);
-        });
-
-        function deleteTeamMember(memberId = null) {
-            if (!memberId) memberId = editingTeamId;
-            if (!memberId) return;
-            
-            if (confirm('Are you sure you want to delete this team member?')) {
-                let team = JSON.parse(localStorage.getItem('absta_team') || '[]');
-                team = team.filter(m => m.id != memberId);
-                localStorage.setItem('absta_team', JSON.stringify(team));
-                
-                if (isFirebaseInitialized) {
-                    const teamObj = {};
-                    team.forEach((mem, index) => {
-                        teamObj[mem.id] = mem;
-                    });
-                    syncToFirebase('team', teamObj);
-                }
-                
-                loadAdminTeam();
-                loadTeamMembers();
-                updateAdminStats();
-                
-                closeModal('teamModal');
-                alert('Team member deleted successfully!');
-            }
-        }
-
-        // ===== ADMIN MESSAGES =====
-        function loadAdminMessages() {
-            const tbody = document.getElementById('messagesTableBody');
-            if (!tbody) return;
-            
-            const messages = JSON.parse(localStorage.getItem('absta_messages') || '[]');
-            
-            if (messages.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="5" style="text-align: center; padding: 40px; color: var(--absta-gray);">
-                            <i class="fas fa-envelope" style="font-size: 2rem; margin-bottom: 10px; display: block;"></i>
-                            <p>No messages yet</p>
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-            
-            tbody.innerHTML = messages.map(message => `
-                <tr style="${message.read ? '' : 'background: rgba(255, 51, 102, 0.05);'}">
-                    <td style="color: white; ${!message.read ? 'font-weight: 600;' : ''}">${message.name}</td>
-                    <td>${message.email}</td>
-                    <td>${message.subject}</td>
-                    <td>${new Date(message.date).toLocaleDateString()}</td>
-                    <td>
-                        <div class="table-actions">
-                            <button class="action-btn edit-btn" onclick="viewMessage(${message.id})">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                            <button class="action-btn delete-btn" onclick="deleteMessage(${message.id})">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function viewMessage(messageId) {
-            viewingMessageId = messageId;
-            const messages = JSON.parse(localStorage.getItem('absta_messages') || '[]');
-            const message = messages.find(m => m.id == messageId);
-            
-            if (message) {
-                message.read = true;
-                localStorage.setItem('absta_messages', JSON.stringify(messages));
-                
-                if (isFirebaseInitialized) {
-                    const messagesObj = {};
-                    messages.forEach((msg, index) => {
-                        messagesObj[msg.id] = msg;
-                    });
-                    syncToFirebase('messages', messagesObj);
-                }
-                
-                document.getElementById('modalMessageTitle').textContent = message.subject;
-                document.getElementById('messageFrom').textContent = message.name;
-                document.getElementById('messageEmail').textContent = message.email;
-                document.getElementById('messageSubject').textContent = message.subject;
-                document.getElementById('messageContent').textContent = message.message;
-                document.getElementById('messageDate').textContent = new Date(message.date).toLocaleString();
-                
-                document.getElementById('messageModal').classList.add('active');
-                
-                loadAdminMessages();
-                updateAdminStats();
-            }
-        }
-
-        function replyToMessage() {
-            const messages = JSON.parse(localStorage.getItem('absta_messages') || '[]');
-            const message = messages.find(m => m.id == viewingMessageId);
-            
-            if (message) {
-                window.location.href = `mailto:${message.email}?subject=Re: ${message.subject}`;
-            }
-        }
-
-        function deleteMessage(messageId = null) {
-            if (!messageId) messageId = viewingMessageId;
-            if (!messageId) return;
-            
-            if (confirm('Are you sure you want to delete this message?')) {
-                let messages = JSON.parse(localStorage.getItem('absta_messages') || '[]');
-                messages = messages.filter(m => m.id != messageId);
-                localStorage.setItem('absta_messages', JSON.stringify(messages));
-                
-                if (isFirebaseInitialized) {
-                    const messagesObj = {};
-                    messages.forEach((msg, index) => {
-                        messagesObj[msg.id] = msg;
-                    });
-                    syncToFirebase('messages', messagesObj);
-                }
-                
-                loadAdminMessages();
-                updateAdminStats();
-                
-                closeModal('messageModal');
-                alert('Message deleted successfully!');
-            }
-        }
-
-        // ===== ADMIN SETTINGS =====
-        function loadAdminSettings() {
-            const settings = JSON.parse(localStorage.getItem('absta_settings') || '{}');
-            
-            const companyName = document.getElementById('companyName');
-            const companyEmail = document.getElementById('companyEmail');
-            const companyPhone = document.getElementById('companyPhone');
-            const companyAddress = document.getElementById('companyAddress');
-            const companyAbout = document.getElementById('companyAbout');
-            
-            if (companyName) companyName.value = settings.companyName || '';
-            if (companyEmail) companyEmail.value = settings.companyEmail || '';
-            if (companyPhone) companyPhone.value = settings.companyPhone || '';
-            if (companyAddress) companyAddress.value = settings.companyAddress || '';
-            if (companyAbout) companyAbout.value = settings.companyAbout || '';
-
-            setupLogoUploadInAdmin();
-            loadLogoFromFirebase()
-        }
-
-        document.getElementById('settingsForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const settings = {
-                companyName: document.getElementById('companyName').value,
-                companyEmail: document.getElementById('companyEmail').value,
-                companyPhone: document.getElementById('companyPhone').value,
-                companyAddress: document.getElementById('companyAddress').value,
-                companyAbout: document.getElementById('companyAbout').value,
-                social: {
-                    instagram: 'https://instagram.com/abstacreatives',
-                    facebook: 'https://facebook.com/abstacreatives',
-                    twitter: 'https://twitter.com/abstacreatives',
-                    youtube: 'https://youtube.com/abstacreatives'
-                }
-            };
-            
-            localStorage.setItem('absta_settings', JSON.stringify(settings));
-            
-            if (isFirebaseInitialized) {
-                syncToFirebase('settings', settings);
-            }
-            
-            loadContactInfo();
-            loadFooterData();
-            
-            alert('Settings saved successfully!');
-        });
-
-        function resetSettings() {
-            if (confirm('Are you sure you want to reset all settings to default?')) {
-                localStorage.removeItem('absta_settings');
-                initData();
-                loadAdminSettings();
-                loadContactInfo();
-                loadFooterData();
-                alert('Settings reset to default!');
-            }
-        }
-
-        // ===== LOGIN SYSTEM =====
-        function checkLoginStatus() {
-            const loggedInUser = localStorage.getItem('absta_logged_in');
-            if (loggedInUser) {
-                currentUser = JSON.parse(loggedInUser);
-            }
-        }
-
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const username = document.getElementById('loginUsername').value;
-            const password = document.getElementById('loginPassword').value;
-            
-            const adminUser = JSON.parse(localStorage.getItem('absta_admin') || '{}');
-            
-            if (username === adminUser.username && password === adminUser.password) {
-                currentUser = { username, isAdmin: true };
-                localStorage.setItem('absta_logged_in', JSON.stringify(currentUser));
-                
-                navigateTo('admin');
-                alert('Login successful!');
-            } else {
-                alert('Invalid username or password!');
-            }
-        });
-
-        function logout() {
-            if (confirm('Are you sure you want to logout?')) {
-                currentUser = null;
-                localStorage.removeItem('absta_logged_in');
-                navigateTo('home');
-                alert('Logged out successfully!');
-            }
-        }
-
-        // ===== FOOTER =====
-        function loadFooterData() {
-            const settings = JSON.parse(localStorage.getItem('absta_settings') || '{}');
-            const socialLinks = document.getElementById('socialLinks');
-            
-            if (settings.social && socialLinks) {
-                let socialHTML = '';
-                const socials = [
-                    { platform: 'instagram', icon: 'fab fa-instagram' },
-                    { platform: 'facebook', icon: 'fab fa-facebook' },
-                    { platform: 'twitter', icon: 'fab fa-twitter' },
-                    { platform: 'youtube', icon: 'fab fa-youtube' }
-                ];
-                
-                socials.forEach(social => {
-                    if (settings.social[social.platform]) {
-                        socialHTML += `
-                            <a href="${settings.social[social.platform]}" target="_blank" title="${social.platform}">
-                                <i class="${social.icon}"></i>
-                            </a>
-                        `;
-                    }
-                });
-                
-                socialLinks.innerHTML = socialHTML;
-            }
-        }
-
-        function updateCurrentYear() {
-            const currentYear = document.getElementById('currentYear');
-            if (currentYear) {
-                currentYear.textContent = new Date().getFullYear();
-            }
-        }
-
-        // ===== MODAL FUNCTIONS =====
-        function closeModal(modalId) {
-            const modal = document.getElementById(modalId);
-            if (modal) {
-                modal.classList.remove('active');
-            }
-            editingProjectId = null;
-            editingTeamId = null;
-            viewingMessageId = null;
-        }
-
-        // ===== UTILITY FUNCTIONS =====
-        function editProject(id) {
-            openProjectModal(id);
-        }
-
-        function editTeamMember(id) {
-            openTeamModal(id);
-        }
-
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                document.querySelectorAll('.modal.active').forEach(modal => {
-                    modal.classList.remove('active');
-                });
-            }
-        });
-
-        document.querySelectorAll('.modal').forEach(modal => {
-            modal.addEventListener('click', function(e) {
-                if (e.target === this) {
-                    this.classList.remove('active');
-                }
-            });
-        });
-
-        const backToTop = document.createElement('button');
-        backToTop.innerHTML = '<i class="fas fa-arrow-up"></i>';
-        backToTop.style.cssText = `
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 50px;
-            height: 50px;
-            background: var(--gradient);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            font-size: 1.2rem;
-            cursor: pointer;
-            opacity: 0;
-            visibility: hidden;
-            transition: var(--transition);
-            z-index: 999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 10px 30px rgba(255, 51, 102, 0.3);
-        `;
+        }, 800);
         
-        document.body.appendChild(backToTop);
+        // Initialize navigation
+        initNavigation();
         
-        backToTop.addEventListener('click', () => {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
+        // Initialize default data
+        initData();
         
-        window.addEventListener('scroll', () => {
-            if (window.scrollY > 500) {
-                backToTop.style.opacity = '1';
-                backToTop.style.visibility = 'visible';
-            } else {
-                backToTop.style.opacity = '0';
-                backToTop.style.visibility = 'hidden';
-            }
-        });
-        // ===== LOGO UPLOAD NA MANAGEMENT - PURE FIREBASE VERSION =====
-
-// Function ya kupakia logo MOJA KWA MOJA kutoka Firebase
-function loadLogoFromFirebase() {
-    const logoImg = document.getElementById('mainLogo');
-    const footerLogoImg = document.getElementById('footerLogoImg');
-    const previewImg = document.getElementById('logoPreviewImg');
-    const currentStatus = document.getElementById('currentLogoStatus');
-    
-    // Hakikisha Firebase ipo
-    if (!isFirebaseInitialized || !database) {
-        console.log("Firebase not ready, using fallback");
-        useFallbackLogo(logoImg, footerLogoImg, previewImg, currentStatus);
-        return;
-    }
-    
-    // Soma logo moja kwa moja kutoka Firebase database
-    database.ref('settings/websiteLogo').once('value')
-        .then((snapshot) => {
-            const firebaseLogo = snapshot.val();
-            
-            if (firebaseLogo && firebaseLogo !== '' && logoImg) {
-                // Logo ipo Firebase - tumia hiyo
-                logoImg.src = firebaseLogo;
-                if (footerLogoImg) footerLogoImg.src = firebaseLogo;
-                if (previewImg) previewImg.src = firebaseLogo;
-                if (currentStatus) {
-                    currentStatus.innerHTML = '<i class="fas fa-cloud" style="color: #33FF88;"></i> Logo kutoka Firebase Cloud';
-                    currentStatus.style.color = '#33FF88';
-                }
-                console.log("✅ Logo loaded from Firebase successfully");
-            } else {
-                // Hakuna logo Firebase
-                console.log("No logo found in Firebase");
-                setDefaultLogo(logoImg, footerLogoImg, previewImg, currentStatus);
-            }
-        })
-        .catch((error) => {
-            console.error("❌ Firebase read error:", error);
-            if (currentStatus) {
-                currentStatus.innerHTML = '<i class="fas fa-exclamation-triangle" style="color: #FF3366;"></i> Error reading from Firebase';
-                currentStatus.style.color = '#FF3366';
-            }
-            setDefaultLogo(logoImg, footerLogoImg, previewImg, currentStatus);
-        });
-}
-
-// Fallback logo ikiwa Firebase haipo
-function useFallbackLogo(logoImg, footerLogoImg, previewImg, currentStatus) {
-    if (currentStatus) {
-        currentStatus.innerHTML = '<i class="fas fa-database" style="color: #FFAA33;"></i> Using local fallback';
-        currentStatus.style.color = '#FFAA33';
-    }
-    setDefaultLogo(logoImg, footerLogoImg, previewImg, currentStatus);
-}
-
-// Set default logo
-function setDefaultLogo(logoImg, footerLogoImg, previewImg, currentStatus) {
-    const defaultLogo = "https://via.placeholder.com/50x50?text=ABSTA";
-    
-    if (logoImg) logoImg.src = defaultLogo;
-    if (footerLogoImg) footerLogoImg.src = defaultLogo;
-    if (previewImg) previewImg.src = defaultLogo;
-}
-
-// Function KUU ya kupakia picha KWENYE FIREBASE DATABASE
-function uploadLogoToFirebase(input) {
-    const file = input.files[0];
-    if (!file) return;
-    
-    // Validation
-    if (file.size > 2 * 1024 * 1024) {
-        alert('❌ Picha ni kubwa sana! Maximum 2MB.');
-        return;
-    }
-    
-    if (!file.type.startsWith('image/')) {
-        alert('❌ Tafadhali chagua picha (PNG, JPG, JPEG, GIF)');
-        return;
-    }
-    
-    // Show uploading status
-    const syncStatus = document.getElementById('syncStatus');
-    if (syncStatus) {
-        syncStatus.classList.add('active');
-        syncStatus.querySelector('i').className = 'fas fa-cloud-upload-alt fa-spin';
-        syncStatus.querySelector('span').textContent = 'Uploading logo to Firebase...';
-    }
-    
-    const reader = new FileReader();
-    
-    reader.onload = function(e) {
-        const imageData = e.target.result; // Base64 string
+        // Initialize Firebase (once)
+        initFirebase();
         
-        // ANDIKA MOJA KWA MOJA KWENYE FIREBASE DATABASE
-        database.ref('settings/websiteLogo').set(imageData)
-            .then(() => {
-                console.log("✅ Logo saved to Firebase database!");
-                
-                // Update display everywhere
-                updateAllLogos(imageData);
-                
-                // Show success message
-                if (syncStatus) {
-                    syncStatus.querySelector('i').className = 'fas fa-check-circle';
-                    syncStatus.querySelector('span').textContent = 'Logo saved to Firebase!';
-                    setTimeout(() => {
-                        syncStatus.classList.remove('active');
-                    }, 3000);
-                }
-                
-                alert('✅ Logo imehifadhiwa kwenye Firebase Database!\nItaonekana kwenye devices zote.');
-                
-                // Refresh preview
-                const previewImg = document.getElementById('logoPreviewImg');
-                if (previewImg) previewImg.src = imageData;
-                
-                // Update status
-                const currentStatus = document.getElementById('currentLogoStatus');
-                if (currentStatus) {
-                    currentStatus.innerHTML = '<i class="fas fa-check-circle" style="color: #33FF88;"></i> Logo saved to Firebase!';
-                    currentStatus.style.color = '#33FF88';
-                }
-            })
-            .catch((error) => {
-                console.error("❌ Firebase write error:", error);
-                
-                if (syncStatus) {
-                    syncStatus.querySelector('i').className = 'fas fa-exclamation-circle';
-                    syncStatus.querySelector('span').textContent = 'Firebase error!';
-                }
-                
-                alert('❌ Imeshindwa kuhifadhi kwenye Firebase!\nError: ' + error.message);
-            });
-    };
+        // Load home page
+        loadHomePage();
+        
+        // Update year
+        updateCurrentYear();
+        
+        // Check login status
+        checkLoginStatus();
+        
+        // Initialize lightbox
+        initLightbox();
+    });
     
-    reader.onerror = function() {
-        alert('❌ Error kusoma faili! Jaribu tena.');
-        if (syncStatus) {
-            syncStatus.classList.remove('active');
+    // ===== NAVIGATION =====
+    function initNavigation() {
+        const mobileToggle = document.getElementById('mobileToggle');
+        const navLinks = document.getElementById('navLinks');
+        
+        if (mobileToggle) {
+            mobileToggle.removeEventListener('click', mobileToggle._listener);
+            mobileToggle._listener = function() {
+                navLinks.classList.toggle('active');
+            };
+            mobileToggle.addEventListener('click', mobileToggle._listener);
         }
-    };
-    
-    reader.readAsDataURL(file);
-}
-
-// Update logos everywhere after upload
-function updateAllLogos(imageData) {
-    // Update navbar logo
-    const mainLogo = document.getElementById('mainLogo');
-    if (mainLogo) mainLogo.src = imageData;
-    
-    // Update footer logo
-    const footerLogo = document.getElementById('footerLogoImg');
-    if (footerLogo) footerLogo.src = imageData;
-    
-    // Update any preview
-    const preview = document.getElementById('logoPreviewImg');
-    if (preview) preview.src = imageData;
-}
-
-// Function ya kufuta logo KUTOKA FIREBASE DATABASE
-function deleteLogoFromFirebase() {
-    if (!confirm('⚠️ Je, una uhakika unataka kufuta logo kutoka Firebase?\nHii itaondoa logo kwenye database yote!')) {
-        return;
     }
     
-    const syncStatus = document.getElementById('syncStatus');
-    if (syncStatus) {
-        syncStatus.classList.add('active');
-        syncStatus.querySelector('i').className = 'fas fa-spinner fa-spin';
-        syncStatus.querySelector('span').textContent = 'Removing logo from Firebase...';
-    }
-    
-    // FUTA KABISA KUTOKA FIREBASE
-    database.ref('settings/websiteLogo').remove()
-        .then(() => {
-            console.log("✅ Logo removed from Firebase database!");
-            
-            // Set default logo
-            const defaultLogo = "https://via.placeholder.com/50x50?text=ABSTA";
-            updateAllLogos(defaultLogo);
-            
-            if (syncStatus) {
-                syncStatus.querySelector('i').className = 'fas fa-check-circle';
-                syncStatus.querySelector('span').textContent = 'Logo removed from Firebase!';
-                setTimeout(() => {
-                    syncStatus.classList.remove('active');
-                }, 3000);
-            }
-            
-            alert('✅ Logo imefutwa kutoka Firebase Database!');
-            
-            // Update status
-            const currentStatus = document.getElementById('currentLogoStatus');
-            if (currentStatus) {
-                currentStatus.innerHTML = '<i class="fas fa-info-circle"></i> No logo in Firebase';
-                currentStatus.style.color = '#8E8E93';
-            }
-            
-            // Clear preview
-            const previewImg = document.getElementById('logoPreviewImg');
-            if (previewImg) previewImg.src = defaultLogo;
-        })
-        .catch((error) => {
-            console.error("❌ Firebase delete error:", error);
-            alert('❌ Imeshindwa kufuta kwenye Firebase!\nError: ' + error.message);
-            if (syncStatus) {
-                syncStatus.classList.remove('active');
-            }
-        });
-}
-
-// Function ya kuangalia logo ipo kwenye Firebase
-function checkFirebaseLogoStatus() {
-    if (!database) return;
-    
-    database.ref('settings/websiteLogo').once('value')
-        .then((snapshot) => {
-            const exists = snapshot.exists();
-            const logoData = snapshot.val();
-            const statusSpan = document.getElementById('firebaseLogoStatus');
-            
-            if (statusSpan) {
-                if (exists && logoData) {
-                    statusSpan.innerHTML = '✅ Logo IKO kwenye Firebase database';
-                    statusSpan.style.color = '#33FF88';
-                } else {
-                    statusSpan.innerHTML = '❌ Hakuna logo kwenye Firebase database';
-                    statusSpan.style.color = '#FFAA33';
-                }
-            }
-        })
-        .catch((error) => {
-            console.error("Status check error:", error);
-        });
-}
-
-// Initialize logo loading when page loads
-// Tafuta DOMContentLoaded yako iliyopo na uongeze hii ndani yake
-function initLogoSystem() {
-    loadLogoFromFirebase();
-    if (database) {
-        checkFirebaseLogoStatus();
-    }
-}
-
-// Call this when admin settings section is shown
-function setupLogoUploadInAdmin() {
-    // Subiri DOM iwe tayari
-    setTimeout(() => {
-        const uploadArea = document.querySelector('.logo-upload-area');
-        if (!uploadArea) {
-            console.log("Logo upload area not found yet");
+    // ===== LOGO MANAGEMENT =====
+    function loadLogoFromFirebase() {
+        if (!database) {
+            setDefaultLogo();
             return;
         }
         
-        // Hakikisha file input ipo
-        let fileInput = document.getElementById('logoFileInput');
-        if (!fileInput) {
-            fileInput = document.createElement('input');
-            fileInput.type = 'file';
-            fileInput.id = 'logoFileInput';
-            fileInput.accept = 'image/*';
-            fileInput.style.display = 'none';
-            fileInput.onchange = function(e) {
-                if (e.target.files && e.target.files[0]) {
-                    uploadLogoToFirebase(e.target);
+        database.ref('settings/websiteLogo').once('value')
+            .then((snapshot) => {
+                const logoData = snapshot.val();
+                if (logoData && logoData !== '') {
+                    updateAllLogos(logoData);
+                } else {
+                    setDefaultLogo();
+                }
+            })
+            .catch(() => setDefaultLogo());
+    }
+    
+    function setDefaultLogo() {
+        const defaultLogo = "https://via.placeholder.com/50x50?text=ABSTA";
+        updateAllLogos(defaultLogo);
+    }
+    
+    function updateAllLogos(imageData) {
+        const mainLogo = document.getElementById('mainLogo');
+        const footerLogo = document.getElementById('footerLogoImg');
+        const previewImg = document.getElementById('logoPreviewImg');
+        
+        if (mainLogo) mainLogo.src = imageData;
+        if (footerLogo) footerLogo.src = imageData;
+        if (previewImg) previewImg.src = imageData;
+    }
+    
+    function uploadLogoToFirebase(input) {
+        const file = input.files[0];
+        if (!file) return;
+        
+        if (file.size > 2 * 1024 * 1024) {
+            alert('File too large! Max 2MB');
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            if (database) {
+                database.ref('settings/websiteLogo').set(e.target.result)
+                    .then(() => {
+                        updateAllLogos(e.target.result);
+                        alert('Logo saved successfully!');
+                    })
+                    .catch(error => alert('Error saving logo: ' + error.message));
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+    
+    // ===== HOME PAGE =====
+    window.loadHomePage = function() {
+        loadFeaturedProjects();
+        updateStats();
+        loadFooterData();
+        setTimeout(refreshImageListeners, 100);
+    };
+    
+    function loadFeaturedProjects() {
+        const projectsGrid = document.getElementById('featuredProjects');
+        if (!projectsGrid) return;
+        
+        const projects = JSON.parse(localStorage.getItem('absta_projects') || '[]');
+        const featured = projects.slice(0, 3);
+        
+        if (featured.length === 0) {
+            projectsGrid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--absta-gray);">
+                <i class="fas fa-video-slash" style="font-size:3rem;margin-bottom:20px;"></i>
+                <h3>No Projects Yet</h3>
+                <p>Check back soon for our latest work</p>
+            </div>`;
+            return;
+        }
+        
+        projectsGrid.innerHTML = featured.map(project => `
+            <div class="portfolio-item" data-category="${project.category}">
+                <div class="portfolio-image">
+                    <img src="${project.image}" alt="${project.title}" loading="lazy">
+                </div>
+                <div class="portfolio-content">
+                    <span class="portfolio-category">${project.category}</span>
+                    <h3 class="portfolio-title">${project.title}</h3>
+                    <p class="portfolio-description">${project.description}</p>
+                    <div class="portfolio-meta">
+                        <div class="portfolio-date">
+                            <i class="far fa-calendar"></i>
+                            <span>${new Date(project.date).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+    
+    function updateStats() {
+        const projects = JSON.parse(localStorage.getItem('absta_projects') || '[]');
+        const projectsCount = document.getElementById('projectsCount');
+        if (projectsCount) projectsCount.textContent = projects.length;
+    }
+    
+    // ===== PORTFOLIO PAGE =====
+    window.loadPortfolioPage = function() {
+        loadAllProjects();
+        initPortfolioTabs();
+        setTimeout(refreshImageListeners, 100);
+    };
+    
+    function loadAllProjects() {
+        const portfolioGrid = document.getElementById('portfolioGrid');
+        if (!portfolioGrid) return;
+        
+        const projects = JSON.parse(localStorage.getItem('absta_projects') || '[]');
+        
+        if (projects.length === 0) {
+            portfolioGrid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--absta-gray);">
+                <i class="fas fa-video-slash" style="font-size:3rem;margin-bottom:20px;"></i>
+                <h3>No Projects Yet</h3>
+                <p>Our portfolio is being updated with amazing projects</p>
+            </div>`;
+            return;
+        }
+        
+        portfolioGrid.innerHTML = projects.map(project => `
+            <div class="portfolio-item" data-category="${project.category}">
+                <div class="portfolio-image">
+                    <img src="${project.image}" alt="${project.title}" loading="lazy">
+                </div>
+                <div class="portfolio-content">
+                    <span class="portfolio-category">${project.category}</span>
+                    <h3 class="portfolio-title">${project.title}</h3>
+                    <p class="portfolio-description">${project.description}</p>
+                    <div class="portfolio-meta">
+                        <div class="portfolio-date">
+                            <i class="far fa-calendar"></i>
+                            <span>${new Date(project.date).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+    
+    function initPortfolioTabs() {
+        const tabs = document.querySelectorAll('#portfolioTabs .admin-tab');
+        tabs.forEach(tab => {
+            tab.removeEventListener('click', tab._listener);
+            tab._listener = function() {
+                tabs.forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                const filter = this.getAttribute('data-filter');
+                filterPortfolioProjects(filter);
+            };
+            tab.addEventListener('click', tab._listener);
+        });
+    }
+    
+    function filterPortfolioProjects(filter) {
+        const projects = document.querySelectorAll('#portfolioGrid .portfolio-item');
+        projects.forEach(project => {
+            if (filter === 'all' || project.getAttribute('data-category') === filter) {
+                project.style.display = 'block';
+            } else {
+                project.style.display = 'none';
+            }
+        });
+    }
+    
+    // ===== ABOUT PAGE =====
+    window.loadAboutPage = function() {
+        loadTeamMembers();
+        setTimeout(refreshImageListeners, 100);
+    };
+    
+    function loadTeamMembers() {
+        const teamGrid = document.getElementById('teamGrid');
+        if (!teamGrid) return;
+        
+        const team = JSON.parse(localStorage.getItem('absta_team') || '[]');
+        
+        if (team.length === 0) {
+            teamGrid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--absta-gray);">
+                <i class="fas fa-users" style="font-size:3rem;margin-bottom:20px;"></i>
+                <h3>Team Information Coming Soon</h3>
+            </div>`;
+            return;
+        }
+        
+        teamGrid.innerHTML = team.map(member => `
+            <div class="team-card">
+                <div class="team-image">
+                    <img src="${member.image}" alt="${member.name}" loading="lazy">
+                </div>
+                <div class="team-info">
+                    <h3>${member.name}</h3>
+                    <div class="team-role">${member.role}</div>
+                    <p class="team-bio">${member.bio}</p>
+                    <div class="social-links">
+                        <a href="mailto:${member.email}" title="Email">
+                            <i class="fas fa-envelope"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+    
+    // ===== CONTACT PAGE =====
+    window.loadContactPage = function() {
+        loadContactInfo();
+        initContactForm();
+    };
+    
+    function loadContactInfo() {
+        const settings = JSON.parse(localStorage.getItem('absta_settings') || '{}');
+        
+        if (settings.companyAddress) {
+            const contactAddress = document.getElementById('contactAddress');
+            const footerAddress = document.getElementById('footerAddress');
+            if (contactAddress) contactAddress.textContent = settings.companyAddress;
+            if (footerAddress) footerAddress.textContent = settings.companyAddress;
+        }
+        
+        if (settings.companyPhone) {
+            const contactPhone = document.getElementById('contactPhone');
+            const footerPhone = document.getElementById('footerPhone');
+            if (contactPhone) contactPhone.textContent = settings.companyPhone;
+            if (footerPhone) footerPhone.textContent = settings.companyPhone;
+        }
+        
+        if (settings.companyEmail) {
+            const contactEmail = document.getElementById('contactEmail');
+            const footerEmail = document.getElementById('footerEmail');
+            if (contactEmail) contactEmail.textContent = settings.companyEmail;
+            if (footerEmail) footerEmail.textContent = settings.companyEmail;
+        }
+    }
+    
+    function initContactForm() {
+        const contactForm = document.getElementById('contactForm');
+        if (contactForm) {
+            contactForm.removeEventListener('submit', contactForm._listener);
+            contactForm._listener = function(e) {
+                e.preventDefault();
+                
+                const message = {
+                    id: Date.now(),
+                    name: document.getElementById('name').value,
+                    email: document.getElementById('email').value,
+                    subject: document.getElementById('subject').value,
+                    message: document.getElementById('message').value,
+                    date: new Date().toISOString(),
+                    read: false
+                };
+                
+                const messages = JSON.parse(localStorage.getItem('absta_messages') || '[]');
+                messages.unshift(message);
+                localStorage.setItem('absta_messages', JSON.stringify(messages));
+                
+                if (database) {
+                    const messagesObj = {};
+                    messages.forEach(msg => { messagesObj[msg.id] = msg; });
+                    syncToFirebase('messages', messagesObj);
+                }
+                
+                alert('Thank you for your message! We will get back to you soon.');
+                contactForm.reset();
+            };
+            contactForm.addEventListener('submit', contactForm._listener);
+        }
+    }
+    
+    // ===== LIGHTBOX SYSTEM =====
+    let currentImageIndex = 0;
+    let currentImageArray = [];
+    
+    function initLightbox() {
+        const modal = document.getElementById('imageModal');
+        const modalImg = document.getElementById('modalImage');
+        const captionText = document.getElementById('modalCaption');
+        const closeBtn = document.querySelector('.image-modal-close');
+        const prevBtn = document.getElementById('prevImageBtn');
+        const nextBtn = document.getElementById('nextImageBtn');
+        
+        if (!modal) return;
+        
+        if (closeBtn) {
+            closeBtn.removeEventListener('click', closeBtn._listener);
+            closeBtn._listener = () => modal.style.display = 'none';
+            closeBtn.addEventListener('click', closeBtn._listener);
+        }
+        
+        if (prevBtn) {
+            prevBtn.removeEventListener('click', prevBtn._listener);
+            prevBtn._listener = () => {
+                if (currentImageArray.length > 0) {
+                    currentImageIndex = (currentImageIndex - 1 + currentImageArray.length) % currentImageArray.length;
+                    modalImg.src = currentImageArray[currentImageIndex].src;
+                    captionText.innerHTML = currentImageArray[currentImageIndex].caption;
                 }
             };
-            uploadArea.parentNode.appendChild(fileInput);
+            prevBtn.addEventListener('click', prevBtn._listener);
         }
         
-        // Bonyeza eneo la kupakia logo
-        uploadArea.onclick = function() {
-            document.getElementById('logoFileInput').click();
-        };
-        
-        // Ongeza kitufe cha kufuta logo
-        if (!document.getElementById('deleteLogoBtn')) {
-            const deleteBtn = document.createElement('button');
-            deleteBtn.id = 'deleteLogoBtn';
-            deleteBtn.type = 'button';
-            deleteBtn.className = 'btn btn-danger';
-            deleteBtn.style.marginTop = '15px';
-            deleteBtn.style.width = '100%';
-            deleteBtn.innerHTML = '<i class="fas fa-trash"></i> Futa Logo Kutoka Firebase';
-            deleteBtn.onclick = deleteLogoFromFirebase;
-            uploadArea.parentNode.appendChild(deleteBtn);
+        if (nextBtn) {
+            nextBtn.removeEventListener('click', nextBtn._listener);
+            nextBtn._listener = () => {
+                if (currentImageArray.length > 0) {
+                    currentImageIndex = (currentImageIndex + 1) % currentImageArray.length;
+                    modalImg.src = currentImageArray[currentImageIndex].src;
+                    captionText.innerHTML = currentImageArray[currentImageIndex].caption;
+                }
+            };
+            nextBtn.addEventListener('click', nextBtn._listener);
         }
         
-        // Ongeza alama ya hali ya logo
-        if (!document.getElementById('firebaseLogoStatus')) {
-            const statusSpan = document.createElement('div');
-            statusSpan.id = 'firebaseLogoStatus';
-            statusSpan.style.marginTop = '10px';
-            statusSpan.style.fontSize = '0.85rem';
-            statusSpan.style.textAlign = 'center';
-            uploadArea.parentNode.appendChild(statusSpan);
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) modal.style.display = 'none';
+        });
+        
+        document.addEventListener('keydown', (e) => {
+            if (modal.style.display === 'block') {
+                if (e.key === 'Escape') modal.style.display = 'none';
+                else if (e.key === 'ArrowLeft' && prevBtn) prevBtn.click();
+                else if (e.key === 'ArrowRight' && nextBtn) nextBtn.click();
+            }
+        });
+    }
+    
+    function openLightbox(element) {
+        const modal = document.getElementById('imageModal');
+        const modalImg = document.getElementById('modalImage');
+        const captionText = document.getElementById('modalCaption');
+        
+        const allImages = [];
+        
+        if (element.closest('.portfolio-grid')) {
+            document.querySelectorAll('.portfolio-image img').forEach((img, index) => {
+                allImages.push({ src: img.src, caption: img.alt || 'Portfolio Image' });
+                if (img === element) currentImageIndex = index;
+            });
+        } else if (element.closest('.team-grid')) {
+            document.querySelectorAll('.team-image img').forEach((img, index) => {
+                allImages.push({ src: img.src, caption: img.alt || 'Team Member' });
+                if (img === element) currentImageIndex = index;
+            });
+        } else {
+            allImages.push({ src: element.src, caption: element.alt || 'Image' });
+            currentImageIndex = 0;
         }
         
-        console.log("✅ Logo upload system imeanza kufanya kazi");
-    }, 100);
-}
-    // Load current logo
-    loadLogoFromFirebase();
-    checkFirebaseLogoStatus();
-}
-
-// Add to your existing loadAdminSettings function
-// Call setupLogoUploadInAdmin() when admin settings are loaded
-    </script>
-</body>
-</html>
+        currentImageArray = allImages;
+        modal.style.display = 'block';
+        modalImg.src = element.src;
+        captionText.innerHTML = element.alt || 'Image';
+    }
+    
+    function refreshImageListeners() {
+        document.querySelectorAll('.portfolio-image img, .team-image img').forEach(img => {
+            img.removeEventListener('click', img._listener);
+            img._listener = function(e) {
+                e.stopPropagation();
+                openLightbox(this);
+            };
+            img.addEventListener('click', img._listener);
+        });
+    }
+    
+    // ===== ADMIN FUNCTIONS (Keep your existing ones) =====
+    // ... (admin functions remain the same, just make sure they don't cause loops)
+    
+    // ===== FOOTER & UTILITIES =====
+    function loadFooterData() {
+        const settings = JSON.parse(localStorage.getItem('absta_settings') || '{}');
+        const socialLinks = document.getElementById('socialLinks');
+        
+        if (settings.social && socialLinks) {
+            let socialHTML = '';
+            const socials = [
+                { platform: 'instagram', icon: 'fab fa-instagram' },
+                { platform: 'facebook', icon: 'fab fa-facebook' },
+                { platform: 'twitter', icon: 'fab fa-twitter' },
+                { platform: 'youtube', icon: 'fab fa-youtube' }
+            ];
+            
+            socials.forEach(social => {
+                if (settings.social[social.platform]) {
+                    socialHTML += `<a href="${settings.social[social.platform]}" target="_blank" title="${social.platform}"><i class="${social.icon}"></i></a>`;
+                }
+            });
+            
+            socialLinks.innerHTML = socialHTML;
+        }
+    }
+    
+    function updateCurrentYear() {
+        const currentYear = document.getElementById('currentYear');
+        if (currentYear) currentYear.textContent = new Date().getFullYear();
+    }
+    
+    function navigateTo(page) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+        
+        const pageElement = document.getElementById(`${page}-page`);
+        if (pageElement) pageElement.classList.add('active');
+        
+        const navLink = document.querySelector(`.nav-link[onclick*="${page}"]`);
+        if (navLink) navLink.classList.add('active');
+        
+        switch(page) {
+            case 'home': loadHomePage(); break;
+            case 'portfolio': loadPortfolioPage(); break;
+            case 'about': loadAboutPage(); break;
+            case 'contact': loadContactPage(); break;
+            case 'admin': checkAdminAccess(); break;
+        }
+        
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    
+    function checkLoginStatus() {
+        const loggedInUser = localStorage.getItem('absta_logged_in');
+        if (loggedInUser) currentUser = JSON.parse(loggedInUser);
+    }
+    
+    function checkAdminAccess() {
+        if (!currentUser) navigateTo('login');
+        else loadAdminDashboard();
+    }
+    
+    // ===== DATA INITIALIZATION =====
+    function initData() {
+        if (!localStorage.getItem('absta_projects')) {
+            localStorage.setItem('absta_projects', JSON.stringify([
+                { id: 1, title: 'Ocean Dreams - Zanzibar Wedding', description: 'A breathtaking wedding film shot on the pristine beaches of Zanzibar.', category: 'wedding', image: 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=800', date: '2024-01-15' },
+                { id: 2, title: 'Urban Pulse - Music Video', description: 'High-energy music video for emerging Tanzanian artist.', category: 'music', image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800', date: '2024-02-20' },
+                { id: 3, title: 'Serengeti Stories - Documentary', description: 'Wildlife documentary showcasing migration patterns in Serengeti.', category: 'documentary', image: 'https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=800', date: '2024-03-10' }
+            ]));
+        }
+        
+        if (!localStorage.getItem('absta_team')) {
+            localStorage.setItem('absta_team', JSON.stringify([
+                { id: 1, name: 'Alexander Benson', role: 'Founder & Creative Director', email: 'alex@abstacreatives.com', bio: 'With over 12 years in visual storytelling.', image: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400' },
+                { id: 2, name: 'Sarah Johnson', role: 'Lead Cinematographer', email: 'sarah@abstacreatives.com', bio: 'Specializes in cinematic storytelling.', image: 'https://images.unsplash.com/photo-1494790108755-2616b786d4d9?w=400' }
+            ]));
+        }
+        
+        if (!localStorage.getItem('absta_messages')) {
+            localStorage.setItem('absta_messages', JSON.stringify([]));
+        }
+        
+        if (!localStorage.getItem('absta_settings')) {
+            localStorage.setItem('absta_settings', JSON.stringify({
+                companyName: 'ABSTA CREATIVES',
+                companyEmail: 'info@abstacreatives.com',
+                companyPhone: '+255 784 123 456',
+                companyAddress: 'Dar es Salaam, Tanzania',
+                companyAbout: 'We create visual stories that captivate and inspire.',
+                social: { instagram: 'https://instagram.com/abstacreatives', facebook: 'https://facebook.com/abstacreatives', twitter: 'https://twitter.com/abstacreatives', youtube: 'https://youtube.com/abstacreatives' }
+            }));
+        }
+        
+        if (!localStorage.getItem('absta_admin')) {
+            localStorage.setItem('absta_admin', JSON.stringify({ username: 'admin', password: 'password123' }));
+        }
+    }
+    
+    // Load admin dashboard (simplified - add your existing admin functions here)
+    window.loadAdminDashboard = function() {
+        updateAdminStats();
+        loadAdminProjects();
+        loadAdminTeam();
+        loadAdminMessages();
+        loadAdminSettings();
+    };
+    
+    function updateAdminStats() {
+        const projects = JSON.parse(localStorage.getItem('absta_projects') || '[]');
+        const team = JSON.parse(localStorage.getItem('absta_team') || '[]');
+        const messages = JSON.parse(localStorage.getItem('absta_messages') || '[]');
+        
+        const projectsCount = document.getElementById('adminProjectsCount');
+        const teamCount = document.getElementById('adminTeamCount');
+        const messagesCount = document.getElementById('adminMessagesCount');
+        
+        if (projectsCount) projectsCount.textContent = projects.length;
+        if (teamCount) teamCount.textContent = team.length;
+        if (messagesCount) messagesCount.textContent = messages.length;
+    }
+    
+    // Add other admin functions here (projects, team, messages CRUD)
+    // ... (keep your existing admin functions but remove any that cause loops)
+    
+    // Make sure these are available globally
+    window.navigateTo = navigateTo;
+    window.loadHomePage = loadHomePage;
+    window.loadPortfolioPage = loadPortfolioPage;
+    window.loadAboutPage = loadAboutPage;
+    window.loadContactPage = loadContactPage;
+    window.loadAdminDashboard = loadAdminDashboard;
+    window.uploadLogoToFirebase = uploadLogoToFirebase;
+    window.deleteLogoFromFirebase = function() {
+        if (database && confirm('Delete logo from Firebase?')) {
+            database.ref('settings/websiteLogo').remove()
+                .then(() => setDefaultLogo())
+                .catch(err => alert('Error: ' + err.message));
+        }
+    };
+    
+    // Back to top button
+    const backToTop = document.createElement('button');
+    backToTop.innerHTML = '<i class="fas fa-arrow-up"></i>';
+    backToTop.style.cssText = `position:fixed;bottom:30px;right:30px;width:50px;height:50px;background:var(--gradient);color:white;border:none;border-radius:50%;cursor:pointer;opacity:0;visibility:hidden;transition:all 0.4s;z-index:999;`;
+    document.body.appendChild(backToTop);
+    backToTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    window.addEventListener('scroll', () => {
+        backToTop.style.opacity = window.scrollY > 500 ? '1' : '0';
+        backToTop.style.visibility = window.scrollY > 500 ? 'visible' : 'hidden';
+    });
+</script>
