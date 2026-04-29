@@ -3689,6 +3689,296 @@
         // For pages that need image listeners
         setTimeout(addImageClickListeners, 500);
     });
+    // ===== LOGO UPLOAD KWA ADMIN PANEL (ONGEZA HIZI FUNCTIONS) =====
+
+// Function ya kuhifadhi logo kwenye Firebase
+function uploadLogoToFirebase(input) {
+    const file = input.files[0];
+    if (!file) return;
+    
+    // Check file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+        alert('❌ Picha ni kubwa sana! Maximum 2MB.');
+        return;
+    }
+    
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+        alert('❌ Tafadhali chagua picha (PNG, JPG, JPEG)');
+        return;
+    }
+    
+    // Show uploading status
+    showSyncStatus('syncing', 'Uploading logo...');
+    
+    const reader = new FileReader();
+    
+    reader.onload = function(e) {
+        const imageData = e.target.result; // Base64 string
+        
+        // Save to Firebase if available
+        if (database && isFirebaseInitialized) {
+            database.ref('settings/websiteLogo').set(imageData)
+                .then(() => {
+                    console.log("✅ Logo saved to Firebase!");
+                    updateAllLogos(imageData);
+                    showSyncStatus('success', 'Logo saved!');
+                    alert('✅ Logo imehifadhiwa kwenye Firebase!');
+                    
+                    // Update preview
+                    const previewImg = document.getElementById('logoPreviewImg');
+                    if (previewImg) previewImg.src = imageData;
+                    
+                    // Update status text
+                    const currentStatus = document.getElementById('currentLogoStatus');
+                    if (currentStatus) {
+                        currentStatus.innerHTML = '<i class="fas fa-check-circle" style="color: #33FF88;"></i> Logo saved to Firebase';
+                        currentStatus.style.color = '#33FF88';
+                    }
+                })
+                .catch((error) => {
+                    console.error("Firebase error:", error);
+                    alert('❌ Imeshindwa kuhifadhi kwenye Firebase!');
+                    showSyncStatus('error', 'Upload failed');
+                });
+        } else {
+            // Save to localStorage only
+            localStorage.setItem('absta_logo', imageData);
+            updateAllLogos(imageData);
+            alert('✅ Logo saved locally!');
+            showSyncStatus('success', 'Logo saved locally');
+        }
+    };
+    
+    reader.onerror = function() {
+        alert('❌ Error reading file!');
+        showSyncStatus('error', 'Read error');
+    };
+    
+    reader.readAsDataURL(file);
+}
+
+// Function ya kufuta logo kutoka Firebase
+function deleteLogoFromFirebase() {
+    if (!confirm('⚠️ Je, una uhakika unataka kufuta logo? Hii itaondoa logo kwenye website yote!')) {
+        return;
+    }
+    
+    showSyncStatus('syncing', 'Removing logo...');
+    
+    if (database && isFirebaseInitialized) {
+        database.ref('settings/websiteLogo').remove()
+            .then(() => {
+                console.log("✅ Logo removed from Firebase!");
+                setDefaultLogo();
+                showSyncStatus('success', 'Logo removed');
+                alert('✅ Logo imefutwa!');
+                
+                // Update status
+                const currentStatus = document.getElementById('currentLogoStatus');
+                if (currentStatus) {
+                    currentStatus.innerHTML = '<i class="fas fa-info-circle"></i> No logo in Firebase';
+                    currentStatus.style.color = '#8E8E93';
+                }
+            })
+            .catch((error) => {
+                console.error("Error removing logo:", error);
+                alert('❌ Imeshindwa kufuta logo!');
+                showSyncStatus('error', 'Delete failed');
+            });
+    } else {
+        localStorage.removeItem('absta_logo');
+        setDefaultLogo();
+        alert('✅ Logo removed locally!');
+    }
+}
+
+// Function ya ku-update logo sehemu zote
+function updateAllLogos(imageData) {
+    // Navbar logo
+    const mainLogo = document.getElementById('mainLogo');
+    if (mainLogo) mainLogo.src = imageData;
+    
+    // Footer logo
+    const footerLogo = document.getElementById('footerLogoImg');
+    if (footerLogo) footerLogo.src = imageData;
+    
+    // Preview image
+    const previewImg = document.getElementById('logoPreviewImg');
+    if (previewImg) previewImg.src = imageData;
+}
+
+// Function ya kuweka default logo
+function setDefaultLogo() {
+    const defaultLogo = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='50' height='50' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23FF3366'/%3E%3Ctext x='50' y='67' text-anchor='middle' fill='white' font-size='40' font-weight='bold'%3EA%3C/text%3E%3C/svg%3E";
+    
+    const mainLogo = document.getElementById('mainLogo');
+    const footerLogo = document.getElementById('footerLogoImg');
+    const previewImg = document.getElementById('logoPreviewImg');
+    
+    if (mainLogo) mainLogo.src = defaultLogo;
+    if (footerLogo) footerLogo.src = defaultLogo;
+    if (previewImg) previewImg.src = defaultLogo;
+}
+
+// Function ya kupakia logo kutoka Firebase wakati wa kuanza
+function loadLogoFromFirebase() {
+    if (database && isFirebaseInitialized) {
+        database.ref('settings/websiteLogo').once('value')
+            .then((snapshot) => {
+                const logoData = snapshot.val();
+                if (logoData && logoData !== '') {
+                    updateAllLogos(logoData);
+                    console.log("✅ Logo loaded from Firebase");
+                    
+                    // Update status in admin
+                    const currentStatus = document.getElementById('currentLogoStatus');
+                    if (currentStatus) {
+                        currentStatus.innerHTML = '<i class="fas fa-cloud" style="color: #33FF88;"></i> Logo from Firebase Cloud';
+                        currentStatus.style.color = '#33FF88';
+                    }
+                } else {
+                    // Check localStorage as fallback
+                    const localLogo = localStorage.getItem('absta_logo');
+                    if (localLogo) {
+                        updateAllLogos(localLogo);
+                    } else {
+                        setDefaultLogo();
+                    }
+                }
+            })
+            .catch((error) => {
+                console.error("Error loading logo:", error);
+                setDefaultLogo();
+            });
+    } else {
+        // Try localStorage
+        const localLogo = localStorage.getItem('absta_logo');
+        if (localLogo) {
+            updateAllLogos(localLogo);
+        } else {
+            setDefaultLogo();
+        }
+    }
+}
+
+// Function ya kuweka logo upload kwenye admin panel
+function setupLogoUploadInAdmin() {
+    setTimeout(() => {
+        const uploadArea = document.querySelector('.logo-upload-area');
+        if (!uploadArea) {
+            console.log("Logo upload area not found");
+            return;
+        }
+        
+        // Create file input if not exists
+        let fileInput = document.getElementById('logoFileInput');
+        if (!fileInput) {
+            fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.id = 'logoFileInput';
+            fileInput.accept = 'image/*';
+            fileInput.style.display = 'none';
+            fileInput.onchange = function(e) {
+                if (e.target.files && e.target.files[0]) {
+                    uploadLogoToFirebase(e.target);
+                }
+                // Reset input so same file can be uploaded again
+                this.value = '';
+            };
+            uploadArea.parentNode.appendChild(fileInput);
+        }
+        
+        // Make upload area clickable
+        uploadArea.onclick = function() {
+            document.getElementById('logoFileInput').click();
+        };
+        
+        // Add delete button if not exists
+        if (!document.getElementById('deleteLogoBtn')) {
+            const deleteBtn = document.createElement('button');
+            deleteBtn.id = 'deleteLogoBtn';
+            deleteBtn.type = 'button';
+            deleteBtn.className = 'btn btn-danger';
+            deleteBtn.style.marginTop = '15px';
+            deleteBtn.style.width = '100%';
+            deleteBtn.innerHTML = '<i class="fas fa-trash"></i> Futa Logo Kutoka Firebase';
+            deleteBtn.onclick = deleteLogoFromFirebase;
+            uploadArea.parentNode.appendChild(deleteBtn);
+        }
+        
+        // Add status span if not exists
+        if (!document.getElementById('firebaseLogoStatus')) {
+            const statusSpan = document.createElement('div');
+            statusSpan.id = 'firebaseLogoStatus';
+            statusSpan.style.marginTop = '15px';
+            statusSpan.style.fontSize = '0.85rem';
+            statusSpan.style.textAlign = 'center';
+            statusSpan.style.padding = '8px';
+            statusSpan.style.background = 'var(--glass-bg)';
+            statusSpan.style.borderRadius = '8px';
+            uploadArea.parentNode.appendChild(statusSpan);
+        }
+        
+        // Check and show current logo status
+        checkFirebaseLogoStatus();
+        
+        console.log("✅ Logo upload system ready");
+    }, 200);
+}
+
+// Function ya kuangalia status ya logo kwenye Firebase
+function checkFirebaseLogoStatus() {
+    if (!database || !isFirebaseInitialized) {
+        const statusSpan = document.getElementById('firebaseLogoStatus');
+        if (statusSpan) {
+            statusSpan.innerHTML = '<i class="fas fa-database"></i> Firebase not connected - using local storage';
+            statusSpan.style.color = '#FFAA33';
+        }
+        return;
+    }
+    
+    database.ref('settings/websiteLogo').once('value')
+        .then((snapshot) => {
+            const statusSpan = document.getElementById('firebaseLogoStatus');
+            if (statusSpan) {
+                if (snapshot.exists() && snapshot.val()) {
+                    statusSpan.innerHTML = '<i class="fas fa-cloud-upload-alt" style="color: #33FF88;"></i> Logo iko kwenye Firebase Cloud ☁️';
+                    statusSpan.style.color = '#33FF88';
+                    statusSpan.style.background = 'rgba(51, 255, 136, 0.1)';
+                } else {
+                    statusSpan.innerHTML = '<i class="fas fa-exclamation-triangle" style="color: #FFAA33;"></i> Hakuna logo kwenye Firebase - Pakia logo hapo juu';
+                    statusSpan.style.color = '#FFAA33';
+                    statusSpan.style.background = 'rgba(255, 170, 51, 0.1)';
+                }
+            }
+            
+            // Update current logo status text
+            const currentStatus = document.getElementById('currentLogoStatus');
+            if (currentStatus) {
+                if (snapshot.exists() && snapshot.val()) {
+                    currentStatus.innerHTML = '<i class="fas fa-check-circle" style="color: #33FF88;"></i> Logo ipo Firebase Cloud';
+                    currentStatus.style.color = '#33FF88';
+                } else {
+                    currentStatus.innerHTML = '<i class="fas fa-info-circle"></i> Hakuna logo - Bonyeza eneo la juu kupakia';
+                    currentStatus.style.color = '#8E8E93';
+                }
+            }
+        })
+        .catch((error) => {
+            console.error("Status check error:", error);
+            const statusSpan = document.getElementById('firebaseLogoStatus');
+            if (statusSpan) {
+                statusSpan.innerHTML = '<i class="fas fa-exclamation-circle" style="color: #FF3366;"></i> Error checking Firebase';
+                statusSpan.style.color = '#FF3366';
+            }
+        });
+}
+
+// Refresh logo display
+function refreshLogoDisplay() {
+    loadLogoFromFirebase();
+}
 </script>
 
   
