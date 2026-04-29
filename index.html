@@ -62,6 +62,63 @@
             padding: 0 20px;
         }
         
+        .logo-image {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            object-fit: cover;
+            transition: var(--transition);
+        }
+       
+        .logo-image:hover {
+            transform: scale(1.05);
+        }
+
+        .footer-logo-image {
+            width: 45px;
+            height: 45px;
+            border-radius: 10px;
+            object-fit: cover;
+        }
+
+        .logo-upload-area {
+           background: var(--glass-bg); 
+           border: 2px dashed var(--absta-primary);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .logo-upload-area:hover {
+            background: rgb(255, 51, 102, 0.1);
+            border-color: var(--absta-accent);
+        }
+
+        .logo-preview{
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .logo-preview-image{
+            width: 100px;
+            height: 100px;
+            border-radius: 20px;
+            object-fit: cover;
+            border: 2px solid var(--glass-border);
+
+        }
+
+        .current-logo {
+            margin: top 15px;
+            text-align: center;
+            color: var(--absta-gray);
+            font-size: 0.85rem;
+        }
+
         /* ===== IMAGE MODAL / LIGHTBOX ===== */
 .image-modal {
     display: none;
@@ -1652,9 +1709,9 @@
     <nav class="navbar">
         <div class="container nav-container">
             <a href="#" class="logo" onclick="navigateTo('home')">
-                <div class="logo-icon">A</div>
-                <div class="logo-text">ABSTA CREATIVES</div>
-            </a>
+    <img src="" alt="ABSTA Logo" class="logo-image" id="mainLogo">
+    <div class="logo-text">ABSTA CREATIVES</div>
+</a>
 
             <div class="nav-links" id="navLinks">
                 <a href="#" class="nav-link active" onclick="navigateTo('home')">
@@ -2264,6 +2321,29 @@
                 <div id="settings-section" class="admin-section">
                     <h3 style="color: white; margin-bottom: 30px;">Website Settings</h3>
                     
+                    <div id="settings-section" class="admin-section">
+    <h3 style="color: white; margin-bottom: 30px;">Website Settings</h3>
+    
+    <!-- SEHEMU MPYA YA LOGO UPLOAD -->
+    <div style="margin-bottom: 40px; padding: 20px; background: var(--glass-bg); border-radius: 15px;">
+        <h4 style="color: white; margin-bottom: 15px;">🏷️ Website Logo</h4>
+        <div class="logo-upload-area" onclick="document.getElementById('logoFileInput').click()">
+            <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; margin-bottom: 10px; color: var(--absta-primary);"></i>
+            <p>Change logo</p>
+            <p style="font-size: 0.8rem; color: var(--absta-gray);">PNG, JPG (Max 2MB)</p>
+        </div>
+        <input type="file" id="logoFileInput" style="display: none;" accept="image/*" onchange="uploadLogoImage(this)">
+        <div class="logo-preview" id="logoPreviewDiv">
+            <img src="" alt="Logo Preview" id="logoPreviewImg">
+        </div>
+        <div class="current-logo" id="currentLogoStatus"></div>
+    </div>
+    
+    <!-- FORM YA SETTINGS ZILIZOPO -->
+    <form id="settingsForm">
+        <!-- ... form yako ya settings iliyopo ... -->
+    </form>
+</div>
                     <form id="settingsForm">
                         <div class="form-row">
                             <div class="form-group">
@@ -2344,10 +2424,10 @@
         <div class="container">
             <div class="footer-grid">
                 <div class="footer-col">
-                    <div class="footer-logo">
-                        <i class="fas fa-camera-retro"></i>
-                        <h3>ABSTA CREATIVES</h3>
-                    </div>
+                  <div class="footer-logo">
+    <img src="" alt="Logo" class="footer-logo-img" id="footerLogoImg">
+    <h3>ABSTA CREATIVES</h3>
+</div>  
                     <p class="footer-tagline">
                         We create visual stories that captivate, inspire, and leave lasting impressions. 
                         Your vision, our creativity.
@@ -4106,12 +4186,297 @@ document.addEventListener('DOMContentLoaded', function() {
                 backToTop.style.visibility = 'hidden';
             }
         });
+        // ===== LOGO UPLOAD NA MANAGEMENT - PURE FIREBASE VERSION =====
+
+// Function ya kupakia logo MOJA KWA MOJA kutoka Firebase
+function loadLogoFromFirebase() {
+    const logoImg = document.getElementById('mainLogo');
+    const footerLogoImg = document.getElementById('footerLogoImg');
+    const previewImg = document.getElementById('logoPreviewImg');
+    const currentStatus = document.getElementById('currentLogoStatus');
+    
+    // Hakikisha Firebase ipo
+    if (!isFirebaseInitialized || !database) {
+        console.log("Firebase not ready, using fallback");
+        useFallbackLogo(logoImg, footerLogoImg, previewImg, currentStatus);
+        return;
+    }
+    
+    // Soma logo moja kwa moja kutoka Firebase database
+    database.ref('settings/websiteLogo').once('value')
+        .then((snapshot) => {
+            const firebaseLogo = snapshot.val();
+            
+            if (firebaseLogo && firebaseLogo !== '' && logoImg) {
+                // Logo ipo Firebase - tumia hiyo
+                logoImg.src = firebaseLogo;
+                if (footerLogoImg) footerLogoImg.src = firebaseLogo;
+                if (previewImg) previewImg.src = firebaseLogo;
+                if (currentStatus) {
+                    currentStatus.innerHTML = '<i class="fas fa-cloud" style="color: #33FF88;"></i> Logo kutoka Firebase Cloud';
+                    currentStatus.style.color = '#33FF88';
+                }
+                console.log("✅ Logo loaded from Firebase successfully");
+            } else {
+                // Hakuna logo Firebase
+                console.log("No logo found in Firebase");
+                setDefaultLogo(logoImg, footerLogoImg, previewImg, currentStatus);
+            }
+        })
+        .catch((error) => {
+            console.error("❌ Firebase read error:", error);
+            if (currentStatus) {
+                currentStatus.innerHTML = '<i class="fas fa-exclamation-triangle" style="color: #FF3366;"></i> Error reading from Firebase';
+                currentStatus.style.color = '#FF3366';
+            }
+            setDefaultLogo(logoImg, footerLogoImg, previewImg, currentStatus);
+        });
+}
+
+// Fallback logo ikiwa Firebase haipo
+function useFallbackLogo(logoImg, footerLogoImg, previewImg, currentStatus) {
+    if (currentStatus) {
+        currentStatus.innerHTML = '<i class="fas fa-database" style="color: #FFAA33;"></i> Using local fallback';
+        currentStatus.style.color = '#FFAA33';
+    }
+    setDefaultLogo(logoImg, footerLogoImg, previewImg, currentStatus);
+}
+
+// Set default logo
+function setDefaultLogo(logoImg, footerLogoImg, previewImg, currentStatus) {
+    const defaultLogo = "https://via.placeholder.com/50x50?text=ABSTA";
+    
+    if (logoImg) logoImg.src = defaultLogo;
+    if (footerLogoImg) footerLogoImg.src = defaultLogo;
+    if (previewImg) previewImg.src = defaultLogo;
+}
+
+// Function KUU ya kupakia picha KWENYE FIREBASE DATABASE
+function uploadLogoToFirebase(input) {
+    const file = input.files[0];
+    if (!file) return;
+    
+    // Validation
+    if (file.size > 2 * 1024 * 1024) {
+        alert('❌ Picha ni kubwa sana! Maximum 2MB.');
+        return;
+    }
+    
+    if (!file.type.startsWith('image/')) {
+        alert('❌ Tafadhali chagua picha (PNG, JPG, JPEG, GIF)');
+        return;
+    }
+    
+    // Show uploading status
+    const syncStatus = document.getElementById('syncStatus');
+    if (syncStatus) {
+        syncStatus.classList.add('active');
+        syncStatus.querySelector('i').className = 'fas fa-cloud-upload-alt fa-spin';
+        syncStatus.querySelector('span').textContent = 'Uploading logo to Firebase...';
+    }
+    
+    const reader = new FileReader();
+    
+    reader.onload = function(e) {
+        const imageData = e.target.result; // Base64 string
+        
+        // ANDIKA MOJA KWA MOJA KWENYE FIREBASE DATABASE
+        database.ref('settings/websiteLogo').set(imageData)
+            .then(() => {
+                console.log("✅ Logo saved to Firebase database!");
+                
+                // Update display everywhere
+                updateAllLogos(imageData);
+                
+                // Show success message
+                if (syncStatus) {
+                    syncStatus.querySelector('i').className = 'fas fa-check-circle';
+                    syncStatus.querySelector('span').textContent = 'Logo saved to Firebase!';
+                    setTimeout(() => {
+                        syncStatus.classList.remove('active');
+                    }, 3000);
+                }
+                
+                alert('✅ Logo imehifadhiwa kwenye Firebase Database!\nItaonekana kwenye devices zote.');
+                
+                // Refresh preview
+                const previewImg = document.getElementById('logoPreviewImg');
+                if (previewImg) previewImg.src = imageData;
+                
+                // Update status
+                const currentStatus = document.getElementById('currentLogoStatus');
+                if (currentStatus) {
+                    currentStatus.innerHTML = '<i class="fas fa-check-circle" style="color: #33FF88;"></i> Logo saved to Firebase!';
+                    currentStatus.style.color = '#33FF88';
+                }
+            })
+            .catch((error) => {
+                console.error("❌ Firebase write error:", error);
+                
+                if (syncStatus) {
+                    syncStatus.querySelector('i').className = 'fas fa-exclamation-circle';
+                    syncStatus.querySelector('span').textContent = 'Firebase error!';
+                }
+                
+                alert('❌ Imeshindwa kuhifadhi kwenye Firebase!\nError: ' + error.message);
+            });
+    };
+    
+    reader.onerror = function() {
+        alert('❌ Error kusoma faili! Jaribu tena.');
+        if (syncStatus) {
+            syncStatus.classList.remove('active');
+        }
+    };
+    
+    reader.readAsDataURL(file);
+}
+
+// Update logos everywhere after upload
+function updateAllLogos(imageData) {
+    // Update navbar logo
+    const mainLogo = document.getElementById('mainLogo');
+    if (mainLogo) mainLogo.src = imageData;
+    
+    // Update footer logo
+    const footerLogo = document.getElementById('footerLogoImg');
+    if (footerLogo) footerLogo.src = imageData;
+    
+    // Update any preview
+    const preview = document.getElementById('logoPreviewImg');
+    if (preview) preview.src = imageData;
+}
+
+// Function ya kufuta logo KUTOKA FIREBASE DATABASE
+function deleteLogoFromFirebase() {
+    if (!confirm('⚠️ Je, una uhakika unataka kufuta logo kutoka Firebase?\nHii itaondoa logo kwenye database yote!')) {
+        return;
+    }
+    
+    const syncStatus = document.getElementById('syncStatus');
+    if (syncStatus) {
+        syncStatus.classList.add('active');
+        syncStatus.querySelector('i').className = 'fas fa-spinner fa-spin';
+        syncStatus.querySelector('span').textContent = 'Removing logo from Firebase...';
+    }
+    
+    // FUTA KABISA KUTOKA FIREBASE
+    database.ref('settings/websiteLogo').remove()
+        .then(() => {
+            console.log("✅ Logo removed from Firebase database!");
+            
+            // Set default logo
+            const defaultLogo = "https://via.placeholder.com/50x50?text=ABSTA";
+            updateAllLogos(defaultLogo);
+            
+            if (syncStatus) {
+                syncStatus.querySelector('i').className = 'fas fa-check-circle';
+                syncStatus.querySelector('span').textContent = 'Logo removed from Firebase!';
+                setTimeout(() => {
+                    syncStatus.classList.remove('active');
+                }, 3000);
+            }
+            
+            alert('✅ Logo imefutwa kutoka Firebase Database!');
+            
+            // Update status
+            const currentStatus = document.getElementById('currentLogoStatus');
+            if (currentStatus) {
+                currentStatus.innerHTML = '<i class="fas fa-info-circle"></i> No logo in Firebase';
+                currentStatus.style.color = '#8E8E93';
+            }
+            
+            // Clear preview
+            const previewImg = document.getElementById('logoPreviewImg');
+            if (previewImg) previewImg.src = defaultLogo;
+        })
+        .catch((error) => {
+            console.error("❌ Firebase delete error:", error);
+            alert('❌ Imeshindwa kufuta kwenye Firebase!\nError: ' + error.message);
+            if (syncStatus) {
+                syncStatus.classList.remove('active');
+            }
+        });
+}
+
+// Function ya kuangalia logo ipo kwenye Firebase
+function checkFirebaseLogoStatus() {
+    if (!database) return;
+    
+    database.ref('settings/websiteLogo').once('value')
+        .then((snapshot) => {
+            const exists = snapshot.exists();
+            const logoData = snapshot.val();
+            const statusSpan = document.getElementById('firebaseLogoStatus');
+            
+            if (statusSpan) {
+                if (exists && logoData) {
+                    statusSpan.innerHTML = '✅ Logo IKO kwenye Firebase database';
+                    statusSpan.style.color = '#33FF88';
+                } else {
+                    statusSpan.innerHTML = '❌ Hakuna logo kwenye Firebase database';
+                    statusSpan.style.color = '#FFAA33';
+                }
+            }
+        })
+        .catch((error) => {
+            console.error("Status check error:", error);
+        });
+}
+
+// Initialize logo loading when page loads
+// Tafuta DOMContentLoaded yako iliyopo na uongeze hii ndani yake
+function initLogoSystem() {
+    loadLogoFromFirebase();
+    if (database) {
+        checkFirebaseLogoStatus();
+    }
+}
+
+// Call this when admin settings section is shown
+function setupLogoUploadInAdmin() {
+    const uploadArea = document.querySelector('.logo-upload-area');
+    if (!uploadArea) return;
+    
+    // Ensure the file input exists
+    let fileInput = document.getElementById('logoFileInput');
+    if (!fileInput) {
+        fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.id = 'logoFileInput';
+        fileInput.accept = 'image/*';
+        fileInput.style.display = 'none';
+        fileInput.onchange = function(e) {
+            uploadLogoToFirebase(e.target);
+        };
+        uploadArea.parentNode.appendChild(fileInput);
+    }
+    
+    // Update click handler
+    uploadArea.onclick = function() {
+        document.getElementById('logoFileInput').click();
+    };
+    
+    // Add delete button if not exists
+    if (!document.getElementById('deleteLogoBtn')) {
+        const deleteBtn = document.createElement('button');
+        deleteBtn.id = 'deleteLogoBtn';
+        deleteBtn.type = 'button';
+        deleteBtn.className = 'btn btn-danger';
+        deleteBtn.style.marginTop = '10px';
+        deleteBtn.style.width = '100%';
+        deleteBtn.innerHTML = '<i class="fas fa-trash"></i> Delete Logo from Firebase';
+        deleteBtn.onclick = deleteLogoFromFirebase;
+        uploadArea.parentNode.appendChild(deleteBtn);
+    }
+    
+    // Load current logo
+    loadLogoFromFirebase();
+    checkFirebaseLogoStatus();
+}
+
+// Add to your existing loadAdminSettings function
+// Call setupLogoUploadInAdmin() when admin settings are loaded
     </script>
 </body>
 </html>
-
-
-
-
-
-
